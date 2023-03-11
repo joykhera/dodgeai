@@ -5,8 +5,8 @@ import neat
 import pickle
 from plot import plot
 
-WIDTH = 500
-HEIGHT = 500
+WIDTH = 800
+HEIGHT = 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
 numGames = 0
@@ -35,6 +35,7 @@ class DodgeAI:
             output = net.activate(self.game.get_state())
             decision = output.index(max(output))
             self.game.loop(decision)
+            # self.game.loop(output)
             
             if self.game.game_over:
                 self.game.reset()
@@ -54,13 +55,17 @@ class DodgeAI:
                     
             output = net.activate(self.game.get_state())
             decision = output.index(max(output))
-            self.game.loop(decision, draw=False)
-            # self.game.loop(decision)
-            # genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.000001
+            # self.game.loop(decision, numGames)
+            self.game.loop(output, numGames)
+            genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.0000001
             
-            if self.game.score > 5 or self.game.game_over:
+            if self.game.score > 1000 or self.game.game_over or self.game.game_over_wall:
                 score = self.game.score
                 genome.fitness += score
+                if self.game.game_over_wall and score < 0.05:
+                    genome.fitness = 0
+                elif self.game.game_over_wall:
+                    genome.fitness /= 2
                 self.game.reset()
                 return score
             
@@ -80,18 +85,20 @@ def eval_genomes(genomes, config):
         total_score += score
         mean_score = total_score / numGames
         plot_mean_scores.append(mean_score)
-        # plot(plot_scores, plot_mean_scores)
+        
+        if numGames > 49000:
+            plot(plot_scores, plot_mean_scores)
         
 def run_neat(config):
-    # p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-7')
+    # p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-529')
     p = neat.Population(config)
     # Log info to console
-    p.add_reporter(neat.StdOutReporter(True))
+    # p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(10, filename_prefix='checkpoints/neat-checkpoint-'))
 
-    winner = p.run(eval_genomes, 1000)
+    winner = p.run(eval_genomes, 500)
     with open("best.pickle", "wb") as f:
         pickle.dump(winner, f)
             

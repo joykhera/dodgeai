@@ -3,6 +3,7 @@ import random
 from .player import Player
 from .enemy import Enemy
 import math
+from collections import Counter
 
 # Set up the window
 pygame.init()
@@ -19,14 +20,16 @@ class Game:
         self.window_width = width
         self.window_height = height
         self.window = window
-        self.player = Player(self.window_width // 2, self.window_height // 2, 10, RED, 10, self.window_width, self.window_height)
+        self.player = Player(self.window_width // 2, self.window_height // 2, 20, RED, 10, self.window_width, self.window_height)
         self.enemies = []
-        for i in range(ENEMY_NUM):
-            self.enemies.append(Enemy(self.window_width, self.window_height))
         self.score = 0
         self.game_over = False
+        self.game_over_wall = False
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 30)
+        
+        for i in range(ENEMY_NUM):
+            self.enemies.append(Enemy(self.window_width, self.window_height))
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -46,17 +49,20 @@ class Game:
                 self.game_over = True
 
         # Increment the score
-        self.score = round(self.score + 0.1, 1)
+        self.score = round(self.score + 0.001, 3)
 
     def draw(self):
         self.window.fill(BLACK)
         self.player.draw(self.window)
         for enemy in self.enemies:
             enemy.draw(self.window)
-
-        # Draw the score
+            pygame.draw.line(self.window, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
         self.window.blit(score_text, (10, 10))
+        # print(self.player.last_locations, set(self.player.last_locations))
+        # elemCounts = Counter(self.player.last_locations).values().sort(reverse=True)
+        # if elemCounts[0] + elemCounts[1] > 15:
+        #     self.game_over = True
 
     def run(self):
         while True:
@@ -66,6 +72,7 @@ class Game:
             
             if self.player.touch_wall():
                 self.game_over = True
+                
             
             pygame.display.update()
             self.clock.tick(60)
@@ -73,23 +80,42 @@ class Game:
             if self.game_over:
                 self.reset()
                 
-    def loop(self, move, draw=True):
+    def loop(self, move, numGames, numGamesDrawAfter=10000, scoreDrawAfter=10000):
         self.player.aiMove(move)
         self.move_enemies()
         
         if self.player.touch_wall():
-            self.game_over = True
+            self.game_over_wall = True
         
-        # if self.game_over:
-        #     self.reset()
-            
-        if draw:
+        # if max(self.player.last_locations) - min(self.player.last_locations) < 20:
+        #     self.game_over = True
+        # if self.score > 0.01:
+        #     print(self.player.last_locations, set(self.player.last_locations), len(set(self.player.last_locations)))
+        # if self.score > 0.01 and len(set(self.player.last_locations)) < 4:
+        #     self.game_over = True
+        if self.score > 0.01:
+            maxDist = 0
+            for coord1 in self.player.last_locations:
+                for coord2 in self.player.last_locations:
+                    if coord1 != coord2:
+                        dist = math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
+                        if dist > maxDist:
+                            maxDist = dist
+            # print(self.player.last_locations, maxDist)
+            if maxDist < 20:
+                self.game_over = True
+                
+        blackScreen = True
+        if numGames > numGamesDrawAfter or self.score > scoreDrawAfter:
             self.draw()
             pygame.display.update()
+            blackScreen = False
+        if not blackScreen:
+            self.window.fill(BLACK)
+            blackScreen = True
         
         
     def reset(self):
-        """Resets the entire game."""
         self.game_over = False
         self.player.reset()
         [enemy.reset() for enemy in self.enemies]
