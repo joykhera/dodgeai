@@ -34,10 +34,10 @@ class DodgeAI:
                 
             output = net.activate(self.game.get_state())
             decision = output.index(max(output))
-            self.game.loop(decision)
-            # self.game.loop(output)
-            
-            if self.game.game_over:
+            # self.game.loop(decision, numGames)
+            self.game.loop(output, numGames)
+
+            if self.game.game_over or self.game.game_over_wall:
                 self.game.reset()
         
         pygame.quit()
@@ -86,19 +86,19 @@ def eval_genomes(genomes, config):
         mean_score = total_score / numGames
         plot_mean_scores.append(mean_score)
         
-        if numGames > 49000:
+        if numGames > 0:
             plot(plot_scores, plot_mean_scores)
         
 def run_neat(config):
-    # p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-529')
-    p = neat.Population(config)
+    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-599')
+    # p = neat.Population(config)
     # Log info to console
-    # p.add_reporter(neat.StdOutReporter(True))
+    p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(10, filename_prefix='checkpoints/neat-checkpoint-'))
 
-    winner = p.run(eval_genomes, 500)
+    winner = p.run(eval_genomes, 1000)
     with open("best.pickle", "wb") as f:
         pickle.dump(winner, f)
             
