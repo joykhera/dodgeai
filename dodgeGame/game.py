@@ -20,7 +20,7 @@ class Game:
         self.window_width = width
         self.window_height = height
         self.window = window
-        self.player = Player(self.window_width // 2, self.window_height // 2, 50, RED, 10, self.window_width, self.window_height)
+        self.player = Player(self.window_width, self.window_height, RED)
         self.enemies = []
         self.score = 0
         self.game_over = False
@@ -43,7 +43,7 @@ class Game:
     def move_enemies(self):
         for enemy in self.enemies:
             # enemy.move()
-            enemy.move()
+            enemy.move((self.player.x, self.player.y))
 
             # Check for collisions with the player
             if self.player.is_colliding_with(enemy):
@@ -81,7 +81,7 @@ class Game:
             if self.game_over:
                 self.reset()
                 
-    def loop(self, move, numGames, numGamesDrawAfter=0, scoreDrawAfter=10000):
+    def loop(self, move, numGames, numGamesDrawAfter=10000, scoreDrawAfter=10000):
         self.player.aiMove(move)
         self.move_enemies()
         

@@ -2,11 +2,11 @@ import pygame
 
 
 class Player:
-    def __init__(self, x, y, radius, color, speed, window_width, window_height):
-        self.initx = x
-        self.inity = y
-        self.x = x
-        self.y = y
+    def __init__(self, window_width, window_height, color, radius=20, speed=10):
+        self.initx = window_width // 2
+        self.inity = window_height // 2
+        self.x = self.initx
+        self.y = self.inity
         self.radius = radius
         self.color = color
         self.speed = speed
