@@ -81,7 +81,7 @@ class Game:
             if self.game_over:
                 self.reset()
                 
-    def loop(self, move, numGames, numGamesDrawAfter=10000, scoreDrawAfter=10000):
+    def loop(self, move, numGames, numGamesDrawAfter=20000, scoreDrawAfter=10000):
         self.player.aiMove(move)
         self.move_enemies()
         
@@ -103,7 +103,7 @@ class Game:
                         if dist > maxDist:
                             maxDist = dist
             # print(self.player.last_locations, maxDist)
-            if maxDist < 20:
+            if maxDist < 35:
                 self.game_over = True
                 
         blackScreen = True

@@ -86,11 +86,11 @@ def eval_genomes(genomes, config):
         mean_score = total_score / numGames
         plot_mean_scores.append(mean_score)
         
-        if numGames > 10000:
+        if numGames > 20000:
             plot(plot_scores, plot_mean_scores)
         
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-29')
+    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-309')
     # p = neat.Population(config)
     # Log info to console
     p.add_reporter(neat.StdOutReporter(True))

@@ -48,7 +48,7 @@ class Player:
             else:
                 self.y += self.speed
                 
-        if len(self.last_locations) > 10:
+        if len(self.last_locations) > 20:
             self.last_locations.pop(0)
         self.last_locations.append((self.x, self.y))
         # print(self.last_locations)
