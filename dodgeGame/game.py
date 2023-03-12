@@ -73,13 +73,14 @@ class Game:
             
             if self.player.touch_wall():
                 self.game_over = True
-                
             
             pygame.display.update()
             self.clock.tick(60)
             
             if self.game_over:
                 self.reset()
+                
+            print(self.get_state())
                 
     def loop(self, move, numGames, numGamesDrawAfter=20000, scoreDrawAfter=10000):
         self.player.aiMove(move)
@@ -126,7 +127,9 @@ class Game:
     def get_state(self):
         state = self.player.getState()
         for enemy in self.enemies:
-            state += ((enemy.x - self.player.x) / self.window_width, (enemy.y - self.player.y) / self.window_height)
-            state += enemy.getState()
+            # state += ((enemy.x - self.player.x) / self.window_width, (enemy.y - self.player.y) / self.window_height)
+            # state += enemy.getState()
+            playerEnemyDir = (math.atan2(self.player.y - enemy.y, self.player.x - enemy.x),)
+            state += (((playerEnemyDir +3.14) / 6.28),)
         return state
 

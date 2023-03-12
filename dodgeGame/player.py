@@ -1,5 +1,5 @@
 import pygame
-
+import math
 
 class Player:
     def __init__(self, window_width, window_height, color, radius=20, speed=10):
@@ -21,14 +21,20 @@ class Player:
     def aiMove(self, move):
         # print(move)
         if len(move) == 1:
-            if move[0] < -0.5:
-                self.x -= self.speed
-            elif move[0] < 0:
-                self.x += self.speed
-            if move[0] < 0.5:
-                self.y -= self.speed
-            else:
-                self.y += self.speed
+            direction = ((move[0] + 1) / (2)) * 360
+            dx = self.speed * math.cos(math.radians(direction))
+            dy = self.speed * math.sin(math.radians(direction))
+            self.x = self.x + dx
+            self.y = self.y + dy
+            # if move[0] < -0.5:
+            #     self.x -= self.speed
+            # elif move[0] < 0:
+            #     self.x += self.speed
+            # if move[0] < 0.5:
+            #     self.y -= self.speed
+            # else:
+            #     self.y += self.speed
+            
         elif (len(move)) == 2:
             if move[0] < 0:
                 self.x -= self.speed
@@ -39,11 +45,12 @@ class Player:
             else:
                 self.y += self.speed
         elif (len(move)) == 4:
-            if move == 0:
+            decision = move.index(max(move))
+            if decision == 0:
                 self.x -= self.speed
-            elif move == 1:
+            elif decision == 1:
                 self.x += self.speed
-            elif move == 2:
+            elif decision == 2:
                 self.y -= self.speed
             else:
                 self.y += self.speed
@@ -83,4 +90,29 @@ class Player:
         self.y = self.inity
         
     def getState(self):
-        return (self.x / self.window_width, self.y / self.window_height, (self.x - self.radius) / self.window_width, (self.window_width - self.radius - self.x) / self.window_width, (self.y - self.radius) / self.window_height, (self.window_height - self.radius - self.y) / self.window_height)
+        # return (self.x / self.window_width, self.y / self.window_height, (self.x - self.radius) / self.window_width, (self.window_width - self.radius - self.x) / self.window_width, (self.y - self.radius) / self.window_height, (self.window_height - self.radius - self.y) / self.window_height)
+        # return (self.x / self.window_width, self.y / self.window_height)
+        xDistToWall = 0
+        yDistToWall = 0
+        
+        if self.x < self.window_width / 2:
+            xDistToWall = self.x
+        else:
+            xDistToWall = self.window_width - self.x
+        if self.x < self.window_width / 2:
+            yDistToWall = self.y
+        else:
+            yDistToWall = self.window_width - self.y
+        
+        if xDistToWall < yDistToWall:
+            if self.x < self.window_width / 2:
+                return (0.25,)
+            else:
+                return (0.75,)
+        else:
+            if self.x < self.window_width / 2:
+                return (0.5,)
+            else:
+                return (1,)
+            
+        

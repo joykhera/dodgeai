@@ -54,8 +54,6 @@ class DodgeAI:
                     quit()
                     
             output = net.activate(self.game.get_state())
-            decision = output.index(max(output))
-            # self.game.loop(decision, numGames)
             self.game.loop(output, numGames)
             genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.0000001
             
@@ -67,6 +65,7 @@ class DodgeAI:
                 elif self.game.game_over_wall:
                     genome.fitness /= 2
                 self.game.reset()
+                # return genome.fitness
                 return score
             
 def eval_genomes(genomes, config):
@@ -90,7 +89,7 @@ def eval_genomes(genomes, config):
             plot(plot_scores, plot_mean_scores)
         
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-309')
+    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-199')
     # p = neat.Population(config)
     # Log info to console
     p.add_reporter(neat.StdOutReporter(True))
