@@ -51,38 +51,13 @@ class Enemy:
             self.dy = self.speed * math.sin(math.radians(self.direction))
             
 
-    def move(self, playerCoords=None):
-        # dx = self.speed * math.cos(math.radians(self.direction))
-        # dy = self.speed * math.sin(math.radians(self.direction))
-        # new_x = self.x + dx
-        # new_y = self.y + dy
+    def move(self, playerCoords=None, score=[0]):
         new_x = self.x + self.dx
         new_y = self.y + self.dy
 
-        # if new_x < self.radius or new_x > self.window_width - self.radius:
-        #     # If the new position would be outside the screen boundaries, move the enemy to just inside the boundary
-        #     if new_x < self.radius:
-        #         self.x = self.radius
-        #     else:
-        #         self.x = self.window_width - self.radius
-        #     # Reverse the direction of movement
-        #     self.direction = 180 - self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
-        # else:
-        #     self.x = new_x
-
-        # if new_y < self.radius or new_y > self.window_height - self.radius:
-        #     # If the new position would be outside the screen boundaries, move the enemy to just inside the boundary
-        #     if new_y < self.radius:
-        #         self.y = self.radius
-        #     else:
-        #         self.y = self.window_height - self.radius
-        #     # Reverse the direction of movement
-        #     self.direction = -self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
-        # else:
-        #     self.y = new_y
-
         if new_x < 0 or new_y < 0 or new_x > self.window_width or new_y > self.window_height:
             self.random_position_perimeter(playerCoords)
+            score[0] += 1
         else:
             self.x = new_x
             self.y = new_y

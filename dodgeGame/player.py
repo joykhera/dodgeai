@@ -90,29 +90,27 @@ class Player:
         self.y = self.inity
         
     def getState(self):
-        # return (self.x / self.window_width, self.y / self.window_height, (self.x - self.radius) / self.window_width, (self.window_width - self.radius - self.x) / self.window_width, (self.y - self.radius) / self.window_height, (self.window_height - self.radius - self.y) / self.window_height)
+        return (self.x / self.window_width, self.y / self.window_height, (self.x - self.radius) / self.window_width, (self.window_width - self.radius - self.x) / self.window_width, (self.y - self.radius) / self.window_height, (self.window_height - self.radius - self.y) / self.window_height)
         # return (self.x / self.window_width, self.y / self.window_height)
-        xDistToWall = 0
-        yDistToWall = 0
-        
-        if self.x < self.window_width / 2:
-            xDistToWall = self.x
-        else:
-            xDistToWall = self.window_width - self.x
-        if self.x < self.window_width / 2:
-            yDistToWall = self.y
-        else:
-            yDistToWall = self.window_width - self.y
-        
-        if xDistToWall < yDistToWall:
-            if self.x < self.window_width / 2:
-                return (0.25,)
-            else:
-                return (0.75,)
-        else:
-            if self.x < self.window_width / 2:
-                return (0.5,)
-            else:
-                return (1,)
-            
-        
+        # xDistToWall = 0
+        # yDistToWall = 0
+
+        # if self.x < self.window_width / 2:
+        #     xDistToWall = self.x
+        # else:
+        #     xDistToWall = self.window_width - self.x
+        # if self.x < self.window_width / 2:
+        #     yDistToWall = self.y
+        # else:
+        #     yDistToWall = self.window_width - self.y
+
+        # if xDistToWall < yDistToWall:
+        #     if self.x < self.window_width / 2:
+        #         return (0.25,)
+        #     else:
+        #         return (0.75,)
+        # else:
+        #     if self.x < self.window_width / 2:
+        #         return (0.5,)
+        #     else:
+        #         return (1,)

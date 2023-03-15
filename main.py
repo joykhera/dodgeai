@@ -4,6 +4,7 @@ import os
 import neat
 import pickle
 from plot import plot
+from ann_visualizer.visualize import ann_viz
 
 WIDTH = 800
 HEIGHT = 800
@@ -44,10 +45,14 @@ class DodgeAI:
         
     def train_ai(self, genome, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
+        # print("net.node_evals", net.node_evals, len(net.node_evals))
+        # print(len(net.node_evals))
+        # ann_viz(net, title=f'Generaton {numGames / 100}')
         run = True
         clock = pygame.time.Clock()
         
         while run:
+            score = self.game.score[0]
             # clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -55,17 +60,16 @@ class DodgeAI:
                     
             output = net.activate(self.game.get_state())
             self.game.loop(output, numGames)
-            genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.0000001
-            
-            if self.game.score > 1000 or self.game.game_over or self.game.game_over_wall:
-                score = self.game.score
-                genome.fitness += score
+            # genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.0000001
+            if score > 1000 or self.game.game_over or self.game.game_over_wall:
+                genome.fitness = score
                 if self.game.game_over_wall and score < 0.05:
                     genome.fitness = 0
                 elif self.game.game_over_wall:
                     genome.fitness /= 2
                 self.game.reset()
                 # return genome.fitness
+                # print(score)
                 return score
             
 def eval_genomes(genomes, config):
@@ -85,12 +89,12 @@ def eval_genomes(genomes, config):
         mean_score = total_score / numGames
         plot_mean_scores.append(mean_score)
         
-        if numGames > 20000:
+        if numGames > 50000:
             plot(plot_scores, plot_mean_scores)
         
 def run_neat(config):
-    p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-199')
-    # p = neat.Population(config)
+    # p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-599')
+    p = neat.Population(config)
     # Log info to console
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
