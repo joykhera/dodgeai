@@ -1,131 +1,34 @@
-import pygame
-from dodgeGame import Game
+import gym
+# import gym_examples
+from gym_examples import DodgeGameEnv
+from gym_examples import GridWorldEnv
 import os
-import neat
-import pickle
-from plot import plot
-from ann_visualizer.visualize import ann_viz
+from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.evaluation import evaluate_policy
+import tensorboard
 
-WIDTH = 800
-HEIGHT = 800
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+def train(timestep=2000000, load_model='model1000k'):
+    env = DodgeGameEnv()
+    log_path = os.path.join('training', 'logs')
+    load_path = os.path.join('training', 'savedModels', load_model)
+    model = None
+    if load_path:
+        model = PPO.load(load_path)
+        model.set_env(env)
+    else:
+        model = PPO('MultiInputPolicy', env, verbose=1, tensorboard_log=log_path)
 
-numGames = 0
-total_score = 0
-plot_scores = []
-plot_mean_scores = []
-
-class DodgeAI:
-    def __init__(self):
-        self.game = Game(WINDOW, WIDTH, HEIGHT)
-        self.player = self.game.player
-        self.enemies = self.game.enemies
-        
-    def test_ai(self, genome, config):
-        net = neat.nn.FeedForwardNetwork.create(genome, config)
-        run  = True
-        clock = pygame.time.Clock()
-        
-        while run:
-            clock.tick(60)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-                    break
-                
-            output = net.activate(self.game.get_state())
-            decision = output.index(max(output))
-            # self.game.loop(decision, numGames)
-            self.game.loop(output, numGames)
-
-            if self.game.game_over or self.game.game_over_wall:
-                self.game.reset()
-        
-        pygame.quit()
-        
-    def train_ai(self, genome, config):
-        net = neat.nn.FeedForwardNetwork.create(genome, config)
-        # print("net.node_evals", net.node_evals, len(net.node_evals))
-        # print(len(net.node_evals))
-        # ann_viz(net, title=f'Generaton {numGames / 100}')
-        run = True
-        clock = pygame.time.Clock()
-        
-        while run:
-            score = self.game.score[0]
-            # clock.tick(60)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    quit()
-                    
-            output = net.activate(self.game.get_state())
-            self.game.loop(output, numGames)
-            # genome.fitness += ((self.game.enemies[0].x - self.game.player.x) ** 2 + (self.game.enemies[0].y - self.game.player.y) ** 2) * 0.0000001
-            if score > 1000 or self.game.game_over or self.game.game_over_wall:
-                genome.fitness = score
-                if self.game.game_over_wall and score < 0.05:
-                    genome.fitness = 0
-                elif self.game.game_over_wall:
-                    genome.fitness /= 2
-                self.game.reset()
-                # return genome.fitness
-                # print(score)
-                return score
-            
-def eval_genomes(genomes, config):
-    for (genome_id, genome) in genomes:
-        global numGames 
-        global plot_scores
-        global plot_mean_scores
-        global total_score
-        
-        numGames += 1
-        genome.fitness = 0
-        game = DodgeAI()
-        score = game.train_ai(genome, config)
-        
-        plot_scores.append(score)
-        total_score += score
-        mean_score = total_score / numGames
-        plot_mean_scores.append(mean_score)
-        
-        if numGames > 50000:
-            plot(plot_scores, plot_mean_scores)
-        
-def run_neat(config):
-    # p = neat.Checkpointer.restore_checkpoint('checkpoints/neat-checkpoint-599')
-    p = neat.Population(config)
-    # Log info to console
-    p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(10, filename_prefix='checkpoints/neat-checkpoint-'))
-
-    winner = p.run(eval_genomes, 1000)
-    with open("best.pickle", "wb") as f:
-        pickle.dump(winner, f)
-            
-            
-def test_ai(config):
-    with open("best.pickle", "rb") as f:
-        winner = pickle.load(f)
-
-    game = DodgeAI()
-    game.test_ai(winner, config)
+    model.learn(total_timesteps=timestep)
+    save_path = os.path.join('training', 'savedModels', 'model{}k'.format(timestep//1000))
+    model.save(save_path)
 
 
-if __name__ == "__main__":
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, "config.txt")
+def test(modelName='model2000k'):
+    ppo_path = os.path.join('training', 'savedModels', modelName)
+    env = DodgeGameEnv(render_mode='human')
+    model = PPO.load(ppo_path)
+    print(evaluate_policy(model, env, n_eval_episodes=20))
 
-    config = neat.Config(
-        neat.DefaultGenome,
-        neat.DefaultReproduction,
-        neat.DefaultSpeciesSet,
-        neat.DefaultStagnation,
-        config_path
-    )
-    
-    run_neat(config)
-    # test_ai(config)
-    # DodgeAI().game.run()
+train()
+# test()
