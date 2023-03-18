@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 class Player:
-    def __init__(self, window_width, window_height, color, radius=20, speed=10):
+    def __init__(self, window_width, window_height, color, radius=10, speed=1):
         self.initx = window_width // 2
         self.inity = window_height // 2
         self.x = self.initx
@@ -13,13 +13,12 @@ class Player:
         self.speed = speed
         self.window_width = window_width
         self.window_height = window_height
-        self.last_locations = []
 
     def draw(self, window):
-        # print(self.last_locations)
         pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
         
     def aiMove(self, move):
+        # print(move)
         if move == 0:
             self.x -= self.speed
         elif move == 1:
@@ -28,10 +27,6 @@ class Player:
             self.y -= self.speed
         else:
             self.y += self.speed
-
-        if len(self.last_locations) > 20:
-            self.last_locations.pop(0)
-        self.last_locations.append((self.x, self.y))
 
     def move(self, keys):
         if keys[pygame.K_LEFT]:

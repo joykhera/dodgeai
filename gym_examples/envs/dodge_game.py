@@ -6,6 +6,8 @@ from random import randint
 import math
 from .player import Player
 from .enemy import Enemy
+from matplotlib import pyplot as plt
+from skimage.transform import resize
 
 # Define colors
 BLACK = (0, 0, 0)
@@ -15,62 +17,79 @@ ENEMY_NUM = 1
 
 
 class DodgeGameEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 200}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 120}
 
-    def __init__(self, render_mode=None, window_size=800):
+    def __init__(self, render_mode=None, window_size=500, policy='CnnPolicy'):
         self.window_size = window_size  # The size of the PyGame window
         self.player = Player(self.window_size, self.window_size, RED)
         self.enemies = []
         self.score = 0
         self.game_over = False
+        self.policy = policy
         
         for i in range(ENEMY_NUM):
             self.enemies.append(Enemy(self.window_size, self.window_size))
-
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
-        self.observation_space = spaces.Dict(
-            {
-                "agent": spaces.Box(0, window_size - 1, shape=(2,), dtype=int),
-                "enemy": spaces.Box(0, window_size - 1, shape=(3,), dtype=int),
-                "walls": spaces.Box(0, window_size - 1, shape=(4,), dtype=int),
-            }
-        )
-
-        # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
-        self.action_space = spaces.Discrete(4)
-
-        """
-        The following dictionary maps abstract actions from `self.action_space` to 
-        the direction we will walk in if that action is taken.
-        I.e. 0 corresponds to "right", 1 to "up" etc.
-        """
-        self._action_to_direction = {
-            0: np.array([1, 0]),
-            1: np.array([0, 1]),
-            2: np.array([-1, 0]),
-            3: np.array([0, -1]),
-        }
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
-        """
-        If human-rendering is used, `self.window` will be a reference
-        to the window that we draw to. `self.clock` will be a clock that is used
-        to ensure that the environment is rendered at the correct framerate in
-        human-mode. They will remain `None` until human-mode is used for the
-        first time.
-        """
-        self.window = None
+        if policy == 'CnnPolicy':
+            self.observation_space = spaces.Box(low=0, high=255, shape=(50, 50, 3), dtype=np.uint8)
+        elif policy == 'MultiInputPolicy':
+            if ENEMY_NUM > 0:
+                self.observation_space = spaces.Dict(
+                    {
+                        "agent": spaces.Box(0, window_size - 1, shape=(2,), dtype=int),
+                        "enemy": spaces.Box(0, window_size - 1, shape=(3 * ENEMY_NUM,), dtype=int),
+                        "walls": spaces.Box(0, window_size - 1, shape=(4,), dtype=int),
+                    }
+                )
+            else:
+                self.observation_space = spaces.Dict(
+                    {
+                        "agent": spaces.Box(0, window_size - 1, shape=(2,), dtype=int),
+                        "walls": spaces.Box(0, window_size - 1, shape=(4,), dtype=int),
+                    }
+                )
+
+        # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
+        self.action_space = spaces.Discrete(4)
+
         self.clock = None
+        self.window = pygame.display.set_mode((self.window_size, self.window_size))
+        
+        if render_mode == 'human':
+            pygame.init()
+            pygame.display.init()
+            self.font = pygame.font.SysFont(None, 30)
+            
 
     def _get_obs(self):
-        return {
-            "agent": self.player.getState(),
-            "enemy": self.enemies[0].getState(),
-            "walls": self.player.getWalls(),
-        }
+        if self.policy == 'CnnPolicy':
+            arr = np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+            )
+            resizedArr = resize(arr, (50, 50))
+            # plt.ion()
+            # plt.imshow(resizedArr, interpolation='nearest')
+            # plt.show()
+            # print(resizedArr.shape)
+            return resizedArr
+        elif self.policy == 'MultiInputPolicy':
+            if ENEMY_NUM > 0:
+                return {
+                    "agent": self.player.getState(),
+                    "enemy": self.enemies[0].getState(player=self.player),
+                    "walls": self.player.getWalls(),
+                }
+            else:
+                return {
+                    "agent": self.player.getState(),
+                    "walls": self.player.getWalls(),
+                }
+
 
     def _get_info(self):
         return {
@@ -104,7 +123,10 @@ class DodgeGameEnv(gym.Env):
         # An episode is done iff the agent has reached the target
         # terminated = np.array_equal(self._agent_location, self._target_location)
         terminated = self.game_over
-        reward = 1 if self.enemies[0].reached else 0  # Binary sparse rewards
+        if len(self.enemies):
+            reward = 1 if self.enemies[0].reached else 0  # Binary sparse rewards
+        else:
+            reward = 0.1
         self.score += reward
         observation = self._get_obs()
         info = self._get_info()
@@ -115,16 +137,12 @@ class DodgeGameEnv(gym.Env):
         # return observation, reward, terminated, False, info
         return observation, reward, terminated, info
 
-    def render(self):
-        if self.render_mode == "rgb_array":
-            return self._render_frame()
-
     def _render_frame(self):
-        if self.window is None and self.render_mode == "human":
-            pygame.init()
-            pygame.display.init()
-            self.font = pygame.font.SysFont(None, 30)
-            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+        # if self.window is None and self.render_mode == "human":
+        #     pygame.init()
+        #     pygame.display.init()
+        #     self.font = pygame.font.SysFont(None, 30)
+        #     self.window = pygame.display.set_mode((self.window_size, self.window_size))
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
@@ -135,8 +153,14 @@ class DodgeGameEnv(gym.Env):
         for enemy in self.enemies:
             enemy.draw(canvas)
             pygame.draw.line(canvas, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
-        score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-        canvas.blit(score_text, (10, 10))
+        # score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+        # canvas.blit(score_text, (10, 10))
+        borderWidth = 2
+        pygame.draw.line(canvas, WHITE, (0, 0), (0, self.window_size - borderWidth), borderWidth)
+        pygame.draw.line(canvas, WHITE, (0, 0), (self.window_size - borderWidth, 0), borderWidth)
+        pygame.draw.line(canvas, WHITE, (0, self.window_size - borderWidth), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
+        pygame.draw.line(canvas, WHITE, (self.window_size - borderWidth, 0), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
+
 
         if self.render_mode == "human":
             # The following line copies our drawings from `canvas` to the visible window
@@ -147,10 +171,10 @@ class DodgeGameEnv(gym.Env):
             # We need to ensure that human-rendering occurs at the predefined framerate.
             # The following line will automatically add a delay to keep the framerate stable.
             self.clock.tick(self.metadata["render_fps"])
-        else:  # rgb_array
-            return np.transpose(
-                np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
-            )
+        # else:  # rgb_array
+        #     return np.transpose(
+        #         np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+        #     )
             
     def move_enemies(self):
         for enemy in self.enemies:

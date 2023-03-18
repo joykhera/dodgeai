@@ -1,40 +1,48 @@
 import gym
 # import gym_examples
 from gym_examples import DodgeGameEnv
-from gym_examples import GridWorldEnv
 import os
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 
 import tensorboard
 
-stop_callback = StopTrainingOnRewardThreshold(reward_threshold=10, verbose=1)
 
-def train(timestep=2000000, load_model='model2000k'):
-    env = DodgeGameEnv()
-    log_path = os.path.join('training', 'logs')
-    load_path = os.path.join('training', 'savedModels', load_model)
-    model = None
-    if load_path:
-        model = PPO.load(load_path)
-        model.set_env(env)
+def run(timestep=100000, method='both', load_file=None, save_file=None, policy='CnnPolicy', n_eval_episodes=10):
+    assert not (method == 'test' and not load_file)
+    
+    save_dir = os.path.join('training', 'savedModels', policy)
+    if save_file:
+        log_path = os.path.join('training', 'logs', policy, save_file)
+        save_path = os.path.join(save_dir, save_file)
     else:
-        model = PPO('MultiInputPolicy', env, verbose=1, tensorboard_log=log_path)
+        log_path = os.path.join('training', 'logs', policy)
+        save_path = os.path.join(save_dir, str(timestep))
 
+    if load_file:
+        load_path = os.path.join(save_dir, load_file)
+        model = PPO.load(load_path)
+    
+    if method == 'train' or method == 'both':
+        trainEnv = DodgeGameEnv(render_mode='rgb_array', policy=policy)
+        
+        if not load_file:
+            model = PPO(policy, env=trainEnv, verbose=1, tensorboard_log=log_path)
+            
+        model.set_env(trainEnv)
+        model.learn(total_timesteps=timestep)
+        model.save(save_path)
+        
+    if method == 'test':
+        model = PPO.load(load_path)
+        
+    if method == 'test' or method == 'both':
+        testEnv = DodgeGameEnv(render_mode='human', policy=policy)
+        model.set_env(testEnv)
+        print(evaluate_policy(model, testEnv, n_eval_episodes=n_eval_episodes))
+        
 
-    save_path = os.path.join('training', 'savedModels', 'model{}k'.format(timestep//1000))
-    eval_callback = EvalCallback(env, callback_on_new_best=stop_callback, eval_freq=10000, best_model_save_path=os.path.join('training', 'savedModels'), verbose=1)
-    model.learn(total_timesteps=timestep, callback=eval_callback)
-    model.save(save_path)
-
-
-def test(modelName='best_model'):
-    ppo_path = os.path.join('training', 'savedModels', modelName)
-    env = DodgeGameEnv(render_mode='human')
-    model = PPO.load(ppo_path)
-    print(evaluate_policy(model, env, n_eval_episodes=20))
-
-# train()
-test()
+run(timestep=10000000, method='train', policy='MultiInputPolicy', n_eval_episodes=20, save_file='speed1')
+# run(timestep=5000000, method='train', policy='MultiInputPolicy', n_eval_episodes=20)
+# run(timestep=1000000, method='both', policy='CnnPolicy', n_eval_episodes=20)

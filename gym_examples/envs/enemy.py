@@ -7,12 +7,12 @@ import math
 
 
 class Enemy:
-    def __init__(self, window_width, window_height, x=0, y=0, color=(255, 255, 255), max_speed=5, max_radius=100):
+    def __init__(self, window_width, window_height, x=0, y=0, color=(255, 255, 255), max_speed=1, max_radius=50, enemyMovement='aimed'):
         self.x = random.randint(0, window_width)
         self.y = random.randint(0, window_height)
-        while math.dist((x, y), (window_width / 2, window_height / 2)) < max_radius + 200:
-            self.x = random.randint(0, window_width)
-            self.y = random.randint(0, window_height)
+        # while math.dist((x, y), (window_width / 2, window_height / 2)) < max_radius + 200:
+        #     self.x = random.randint(0, window_width)
+        #     self.y = random.randint(0, window_height)
         self.max_radius = max_radius
         self.radius = max_radius  # random.randint(1, max_radius)
         self.color = color
@@ -66,7 +66,10 @@ class Enemy:
             self.x = new_x
             self.y = new_y
 
-    def getState(self):
+    def getState(self, player=None):
         # return (self.x, self.y, self.radius, self.speed, self.direction)
         # return (self.direction / 360,)
-        return (self.x, self.y, self.direction)
+        if player: 
+            return (player.x - self.x, player.y - self.y, self.direction)
+        else:
+            return (self.x, self.y, self.direction)
