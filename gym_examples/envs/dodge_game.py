@@ -8,27 +8,29 @@ from .player import Player
 from .enemy import Enemy
 from matplotlib import pyplot as plt
 from skimage.transform import resize
+import itertools
 
 # Define colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-ENEMY_NUM = 1
 
 
 class DodgeGameEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 120}
 
-    def __init__(self, render_mode=None, window_size=500, policy='CnnPolicy'):
+    def __init__(self, render_mode=None, window_size=500, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1):
         self.window_size = window_size  # The size of the PyGame window
         self.player = Player(self.window_size, self.window_size, RED)
         self.enemies = []
         self.score = 0
         self.game_over = False
         self.policy = policy
-        
-        for i in range(ENEMY_NUM):
-            self.enemies.append(Enemy(self.window_size, self.window_size))
+        self.enemy_movement = enemy_movement
+        self.enemy_num = enemy_num
+
+        for i in range(enemy_num):
+            self.enemies.append(Enemy(self.window_size, self.window_size, enemy_movement=enemy_movement))
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
 
@@ -38,11 +40,11 @@ class DodgeGameEnv(gym.Env):
         if policy == 'CnnPolicy':
             self.observation_space = spaces.Box(low=0, high=255, shape=(50, 50, 3), dtype=np.uint8)
         elif policy == 'MultiInputPolicy':
-            if ENEMY_NUM > 0:
+            if enemy_num > 0:
                 self.observation_space = spaces.Dict(
                     {
                         "agent": spaces.Box(0, window_size - 1, shape=(2,), dtype=int),
-                        "enemy": spaces.Box(0, window_size - 1, shape=(3 * ENEMY_NUM,), dtype=int),
+                        "enemy": spaces.Box(0, window_size - 1, shape=(3 * enemy_num,), dtype=int),
                         "walls": spaces.Box(0, window_size - 1, shape=(4,), dtype=int),
                     }
                 )
@@ -58,13 +60,13 @@ class DodgeGameEnv(gym.Env):
         self.action_space = spaces.Discrete(4)
 
         self.clock = None
-        self.window = pygame.display.set_mode((self.window_size, self.window_size))
-        
+        if render_mode == 'human' or policy == 'CnnPolicy':
+            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+
         if render_mode == 'human':
             pygame.init()
             pygame.display.init()
             self.font = pygame.font.SysFont(None, 30)
-            
 
     def _get_obs(self):
         if self.policy == 'CnnPolicy':
@@ -78,10 +80,10 @@ class DodgeGameEnv(gym.Env):
             # print(resizedArr.shape)
             return resizedArr
         elif self.policy == 'MultiInputPolicy':
-            if ENEMY_NUM > 0:
+            if self.enemy_num > 0:
                 return {
                     "agent": self.player.getState(),
-                    "enemy": self.enemies[0].getState(player=self.player),
+                    "enemy": tuple(itertools.chain(*[enemy.getState(player=self.player,) for enemy in self.enemies])),
                     "walls": self.player.getWalls(),
                 }
             else:
@@ -89,7 +91,6 @@ class DodgeGameEnv(gym.Env):
                     "agent": self.player.getState(),
                     "walls": self.player.getWalls(),
                 }
-
 
     def _get_info(self):
         return {
@@ -108,7 +109,7 @@ class DodgeGameEnv(gym.Env):
         info = self._get_info()
 
         if self.render_mode == "human":
-            self._render_frame()
+            self.render()
 
         # return observation, info
         return observation
@@ -123,21 +124,34 @@ class DodgeGameEnv(gym.Env):
         # An episode is done iff the agent has reached the target
         # terminated = np.array_equal(self._agent_location, self._target_location)
         terminated = self.game_over
-        if len(self.enemies):
-            reward = 1 if self.enemies[0].reached else 0  # Binary sparse rewards
+        if len(self.enemies) and self.enemy_movement == 'aimed':
+            reward = 0.1 if not self.game_over else -1
+            # reward = 1 if self.enemies[0].reached else 0  # Binary sparse rewards
+            # reward = 1 - math.dist((self.player.x, self.player.y), (self.window_size // 2, self.window_size // 2)) / self.window_size
+            
+            # minEnemyDist = self.window_size
+            # for enemy in self.enemies:
+            #     dist = math.dist((self.player.x, self.player.y), (enemy.x, enemy.y))
+            #     if dist < minEnemyDist:
+            #         minEnemyDist = dist
+            # reward = minEnemyDist / self.window_size
+                    
+            
+            # reward = min(self.player.x - self.player.radius, self.window_size - self.player.radius - self.player.x, self.player.y -
+            #              self.player.radius, self.window_size - self.player.radius - self.player.y) / self.window_size
         else:
             reward = 0.1
         self.score += reward
         observation = self._get_obs()
         info = self._get_info()
-        
+
         if self.render_mode == "human":
-            self._render_frame()
+            self.render()
 
         # return observation, reward, terminated, False, info
         return observation, reward, terminated, info
 
-    def _render_frame(self):
+    def render(self):
         # if self.window is None and self.render_mode == "human":
         #     pygame.init()
         #     pygame.display.init()
@@ -153,14 +167,13 @@ class DodgeGameEnv(gym.Env):
         for enemy in self.enemies:
             enemy.draw(canvas)
             pygame.draw.line(canvas, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
-        # score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-        # canvas.blit(score_text, (10, 10))
+        score_text = self.font.render(f"Score: {round(self.score)}", True, WHITE)
+        canvas.blit(score_text, (10, 10))
         borderWidth = 2
         pygame.draw.line(canvas, WHITE, (0, 0), (0, self.window_size - borderWidth), borderWidth)
         pygame.draw.line(canvas, WHITE, (0, 0), (self.window_size - borderWidth, 0), borderWidth)
         pygame.draw.line(canvas, WHITE, (0, self.window_size - borderWidth), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
         pygame.draw.line(canvas, WHITE, (self.window_size - borderWidth, 0), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
-
 
         if self.render_mode == "human":
             # The following line copies our drawings from `canvas` to the visible window
@@ -175,7 +188,7 @@ class DodgeGameEnv(gym.Env):
         #     return np.transpose(
         #         np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         #     )
-            
+
     def move_enemies(self):
         for enemy in self.enemies:
             # enemy.move()
@@ -185,7 +198,23 @@ class DodgeGameEnv(gym.Env):
             if self.player.is_colliding_with(enemy):
                 self.game_over = True
 
-    def close(self):
-        if self.window is not None:
-            pygame.display.quit()
-            pygame.quit()
+    def run(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    # self.game_over = True
+                    pygame.quit()
+
+            keys = pygame.key.get_pressed()
+            self.player.move(keys)
+            self.move_enemies()
+            self.render()
+
+            if self.player.touch_wall():
+                self.game_over = True
+
+            pygame.display.update()
+            self.clock.tick(60)
+
+            if self.game_over:
+                self.reset()
