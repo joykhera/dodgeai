@@ -1,6 +1,5 @@
 from gym.envs.registration import register
 # from envs.grid_world import GridWorldEnv
-from gym_examples.envs.grid_world import GridWorldEnv
 from gym_examples.envs.dodge_game import DodgeGameEnv
 
 register(

@@ -7,19 +7,16 @@ import math
 
 
 class Enemy:
-    def __init__(self, window_width, window_height, x=0, y=0, color=(255, 255, 255), max_speed=5, max_radius=50, enemy_movement='aimed'):
+    def __init__(self, window_width, window_height, color=(255, 255, 255), max_speed=5, max_radius=50, enemy_movement='aimed', random_radius=False, random_speed=False):
         self.x = random.randint(0, window_width)
         self.y = random.randint(0, window_height)
-        # while math.dist((x, y), (window_width / 2, window_height / 2)) < max_radius + 200:
-        #     self.x = random.randint(0, window_width)
-        #     self.y = random.randint(0, window_height)
-        self.max_radius = max_radius
-        self.radius = max_radius  # random.randint(1, max_radius)
         self.color = color
+        self.random_speed = random_speed
+        self.random_radius = random_radius
+        self.max_radius = max_radius
         self.max_speed = max_speed
-        self.speed = max_speed  # random.randint(1, max_speed)
-        # self.dx = random.randint(-self.speed, self.speed)
-        # self.dy = random.randint(-self.speed, self.speed)
+        self.radius = random.randint(1, max_radius) if random_radius else max_radius
+        self.speed = random.randint(1, max_speed) if random_speed else max_speed
         self.window_width = window_width
         self.window_height = window_height
         self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(175, 355)][random.randint(0, 3)]  # random.randint(0, 360)
@@ -58,8 +55,17 @@ class Enemy:
             while math.dist((self.x, self.y), (self.window_width / 2, self.window_height / 2)) < self.max_radius + 50:
                 self.x = random.randint(0, self.window_width)
                 self.y = random.randint(0, self.window_height)
-            self.dx = random.randint(-self.speed, self.speed)
-            self.dy = random.randint(-self.speed, self.speed)
+            
+            self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(175, 355)][random.randint(0, 3)]  # random.randint(0, 360)
+            
+            self.dx = self.speed * math.cos(math.radians(self.direction))  # random.randint(-self.speed, self.speed)
+            self.dy = self.speed * math.sin(math.radians(self.direction))  # random.randint(-self.speed, self.speed)
+            
+        if self.random_radius:
+            self.radius = random.randint(1, self.max_radius)
+
+        if self.random_speed:
+            self.speed = random.randint(1, self.max_speed)
             
 
     def move(self, playerCoords=None):
@@ -101,16 +107,20 @@ class Enemy:
             else:
                 self.y = new_y
 
-    def getState(self, player=None, direction=True):
-        # return (self.x, self.y, self.radius, self.speed, self.direction)
-        # return (self.direction / 360,)
-        if direction:
-            if player: 
-                return (player.x - self.x, player.y - self.y, self.direction)
-            else:
-                return (self.x, self.y, self.direction)
+    def getState(self, player=None, direction=True, radius=False, speed=False):
+        if player:
+            state = (player.x - self.x, player.y - self.y)
         else:
-            if player:
-                return (player.x - self.x, player.y - self.y)
-            else:
-                return (self.x, self.y)
+            state = (self.x, self.y)
+            
+        if direction:
+            # state += (self.direction,)
+            state += (self.dx, self.dy)
+        
+        if radius:
+            state += (self.radius,)
+            
+        if speed:
+            state += (self.speed,)
+            
+        return state
