@@ -17,11 +17,12 @@ RED = (255, 0, 0)
 
 
 class DodgeGameEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 300}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, render_mode=None, window_size=500, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False):
-        self.window_size = window_size  # The size of the PyGame window
-        self.player = Player(self.window_size, self.window_size, RED, random_radius=random_player_radius, random_speed=random_player_speed)
+    def __init__(self, render_mode=None, window_size=64, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1, normalize=False, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False):
+        self.window_size = window_size
+        self.player = Player(self.window_size, self.window_size, WHITE, max_speed=window_size * 0.0006, normalize=normalize,
+                             max_radius=window_size * 0.0008, random_radius=random_player_radius, random_speed=random_player_speed)
         self.enemies = []
         self.score = 0
         self.game_over = False
@@ -31,15 +32,15 @@ class DodgeGameEnv(gym.Env):
         self.hp = 10
 
         for i in range(enemy_num):
-            self.enemies.append(Enemy(self.window_size, self.window_size, enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
-        # Observations are dictionaries with the agent's and the target's location.
-        # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
+            # self.enemies.append(Enemy(self.window_size, self.window_size, enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
+            self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=normalize, max_speed=window_size * 0.0005, max_radius=window_size * 0.0008,
+                                enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
         if policy == 'CnnPolicy':
-            self.observation_space = spaces.Box(low=0, high=255, shape=(50, 50, 3), dtype=np.uint8)
+            self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
         elif policy == 'MultiInputPolicy':
             if enemy_num > 0:
                 self.observation_space = spaces.Dict(
@@ -64,7 +65,6 @@ class DodgeGameEnv(gym.Env):
                 }
             )
 
-        # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
         self.action_space = spaces.Discrete(4)
 
         self.clock = None
@@ -78,15 +78,17 @@ class DodgeGameEnv(gym.Env):
 
     def _get_obs(self):
         if self.policy == 'CnnPolicy':
-            arr = np.transpose(
-                np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
-            )
-            resizedArr = resize(arr, (50, 50))
+            arr = self.render()
+            # arr = np.transpose(
+            #     np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+            # )
+            # resizedArr = resize(arr, (50, 50))
             # plt.ion()
             # plt.imshow(resizedArr, interpolation='nearest')
             # plt.show()
             # print(resizedArr.shape)
-            return resizedArr
+            # return resizedArr
+            return arr
         
         elif self.policy == 'MultiInputPolicy':
             if self.enemy_num > 0:
@@ -121,6 +123,7 @@ class DodgeGameEnv(gym.Env):
         self.player.reset()
         [enemy.reset() for enemy in self.enemies]
         self.score = 0
+        self.hp = 10
 
         observation = self._get_obs()
         info = self._get_info()
@@ -130,17 +133,22 @@ class DodgeGameEnv(gym.Env):
 
         # return observation, info
         return observation
+    
+    def is_game_over(self):
+        # print(self.player.radius, np.array([enemy.radius for enemy in self.enemies]))
+        return np.any(np.linalg.norm(self.player.pos - [enemy.pos for enemy in self.enemies], axis=1) \
+                      < (self.player.radius + np.array([enemy.radius for enemy in self.enemies])) or
+                        np.any((self.player.pos < 0) | (self.player.pos > 1)))
 
     def step(self, action):
+        if self.game_over:
+            self.game_over = False
         self.player.aiMove(action)
         self.move_enemies()
-
+        # print(action, self.player.x, self.player.y, self.player.speed, self.player.radius)
         if self.player.touch_wall():
             self.game_over = True
 
-        # An episode is done iff the agent has reached the target
-        # terminated = np.array_equal(self._agent_location, self._target_location)
-        terminated = self.game_over
         if len(self.enemies) and self.enemy_movement == 'aimed':
             # reward = 0.1 if not self.game_over else -1
             # reward = 1 if self.enemies[0].reached else 0  # Binary sparse rewards
@@ -164,12 +172,12 @@ class DodgeGameEnv(gym.Env):
             #     reward = -0.5
             # else:
             #     reward = 0.1
-            
-            self.hp -= self.game_over
-            reward = 1 + self.game_over * -20
-            done = self.hp == 0
-            # print(self.game_over, self.hp, reward)
+            game_over = self.is_game_over()
+            self.hp -= game_over
+            reward = 1 + game_over * -20
+            done = self.hp <= 0
             self.score += reward
+            # print(self.game_over, self.hp, reward, self.score, done)
             
             # reward = min(self.player.x - self.player.radius, self.window_size - self.player.radius - self.player.x, self.player.y -
             #              self.player.radius, self.window_size - self.player.radius - self.player.y) / self.window_size
@@ -179,14 +187,15 @@ class DodgeGameEnv(gym.Env):
         observation = self._get_obs()
         info = self._get_info()
 
-        if self.render_mode == "human":
-            self.render()
+        # if self.render_mode == "human":
+        #     self.render()
 
         # return observation, reward, terminated, False, info
         # return observation, reward, terminated, info
-        return observation, reward, done, info
+        # print(observation, reward, done, info)
+        return observation, reward, done, None, info
 
-    def render(self):
+    def render(self, mode="human"):
         # if self.window is None and self.render_mode == "human":
         #     pygame.init()
         #     pygame.display.init()
@@ -197,21 +206,16 @@ class DodgeGameEnv(gym.Env):
 
         canvas = pygame.Surface((self.window_size, self.window_size))
         canvas.fill(BLACK)
+        pygame.draw.rect(canvas, WHITE, (0, 0, self.window_size, self.window_size), 2)
 
         self.player.draw(canvas)
         for enemy in self.enemies:
             enemy.draw(canvas)
             # pygame.draw.line(canvas, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
-        score_text = self.font.render(f"Score: {round(self.score)}", True, WHITE)
-        canvas.blit(score_text, (10, 10))
-        borderWidth = 2
-        pygame.draw.line(canvas, WHITE, (0, 0), (0, self.window_size - borderWidth), borderWidth)
-        pygame.draw.line(canvas, WHITE, (0, 0), (self.window_size - borderWidth, 0), borderWidth)
-        pygame.draw.line(canvas, WHITE, (0, self.window_size - borderWidth), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
-        pygame.draw.line(canvas, WHITE, (self.window_size - borderWidth, 0), (self.window_size - borderWidth, self.window_size - borderWidth), borderWidth)
 
         if self.render_mode == "human":
-            # The following line copies our drawings from `canvas` to the visible window
+            # score_text = self.font.render(f"Score: {round(self.score)}", True, WHITE)
+            # canvas.blit(score_text, (10, 10))
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
             pygame.display.update()
@@ -223,6 +227,12 @@ class DodgeGameEnv(gym.Env):
         #     return np.transpose(
         #         np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         #     )
+        # print('ddd', np.transpose(
+        #     np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
+        # ).shape)
+        return np.transpose(
+            np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
+        )
 
     def move_enemies(self):
         for enemy in self.enemies:
