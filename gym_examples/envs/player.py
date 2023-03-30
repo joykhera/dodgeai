@@ -33,7 +33,7 @@ class Player:
         pygame.draw.circle(window, self.color, (x, y), r)
         
     def aiMove(self, move):
-        if isinstance(move, np.int64) or isinstance(move, int):
+        if isinstance(move, np.int64) or isinstance(move, int) or isinstance(move, np.ndarray):
             if move == 0:
                 self.x -= self.speed
             elif move == 1:
@@ -49,7 +49,6 @@ class Player:
             
         self.pos[0] = self.x
         self.pos[1] = self.y
-        # print(self.pos)
             
         # if len(self.last_locations) > 20:
         #     self.last_locations.pop(0)

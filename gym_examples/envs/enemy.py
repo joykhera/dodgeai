@@ -82,6 +82,7 @@ class Enemy:
         if self.enemy_movement == 'aimed':
             new_x = self.x + self.dx
             new_y = self.y + self.dy
+            
             if new_x < 0 or new_y < 0 or new_x > self.game_width or new_y > self.game_height:
                 self.reached = True
                 self.reset(playerCoords)
@@ -102,7 +103,8 @@ class Enemy:
                 else:
                     self.x = self.game_width - self.radius
                 # Reverse the direction of movement
-                self.direction = 180 - self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
+                # self.direction = 180 - self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
+                self.dx *= -1
             else:
                 self.x = new_x
 
@@ -113,7 +115,8 @@ class Enemy:
                 else:
                     self.y = self.game_height - self.radius
                 # Reverse the direction of movement
-                self.direction = -self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
+                # self.direction = -self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
+                self.dy *= -1
             else:
                 self.y = new_y
                 

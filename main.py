@@ -130,12 +130,6 @@ def run(timestep=100000,
             model.learn(total_timesteps=timestep)
         model.save(save_path)
 
-    if method == 'test':
-        if model_type == 'PPO':
-            model = PPO.load(load_path)
-        elif model_type == 'A2C':
-            model = A2C.load(load_path)
-
     if method == 'test' or method == 'both':
         # if isinstance(vec_env_num, int):
         #     testEnv = make_vec_env(vec_env_num, render_mode='human')
@@ -143,34 +137,42 @@ def run(timestep=100000,
         #     testEnv = make_env(render_mode='human')
 
         if isinstance(vec_env_num, int):
-            testEnv = make_vec_env(vec_env_num)
+            testEnv = make_vec_env(vec_env_num, render_mode='human')
+            testEnv.save("./env")
         else:
-            testEnv = make_env()
+            testEnv = make_env(render_mode='human')
+            
+        if model_type == 'PPO':
+            model = PPO.load(load_path, testEnv)
+        elif model_type == 'A2C':
+            model = A2C.load(load_path)
 
-        model.set_env(testEnv)
-        testEnv.save("./env")
-        # print(evaluate_policy(model, testEnv, n_eval_episodes=n_eval_episodes))
+        if isinstance(vec_env_num, int):
+            frames = []
+            env = VecNormalize.load("./env", DummyVecEnv([make_env] * vec_env_num))
+            env.training = False
+            env.norm_reward = False
+            model = PPO.load(load_path, env=env)
+            obs = env.reset()
+            while True:
+                action, _state = model.predict(obs, deterministic=True)
+                obs, _reward, _done, _info = env.step(action)
+                frames.append(env.render())
+        else:
+            obs = testEnv.reset()
+            while True:
+                action, _state = model.predict(obs, deterministic=True)
+                # print(obs.shape, action)
+                obs, _reward, _done, _, _info = testEnv.step(action)
+                if _done:
+                    testEnv.reset()
 
-        frames = []
-        env = VecNormalize.load("./env", DummyVecEnv([make_env] * 16))
-        env.training = False
-        env.norm_reward = False
-        model = PPO.load(load_path, env=env)
-        obs = env.reset()
-        for _ in range(1000):
-            action, _state = model.predict(obs, deterministic=True)
-            obs, _reward, _done, _info = env.step(action)
-            # print('aa', env.render())
-            frames.append(env.render())
-            # print(env.score, env.hp)
-        # media.show_video(frames, fps=30, width=600)
 
-
-# run(timestep=1000000, method='train', policy='CnnPolicy', vec_env_num=64, normalize=True, save_file='normalize=True,vec_env_num=64')
+# run(timestep=5000000, method='train', policy='CnnPolicy', vec_env_num=64, normalize=True, batch_size=1024, save_file='vec_env_num=64,normalize=True,batch_size=1024')
 # run(timestep=2000000, method='train', policy='CnnPolicy', save_file='atari_params,FrameStack=4')
-# run(timestep=5000000, model_type='A2C', method='train', policy='CnnPolicy', save_file='default_params')
 # run(timestep=100000000, method='train', save_file='n_steps=500000,learning_rate=0.000005,enemy_num=5', enemy_num=5)
-# run(method='test', policy='CnnPolicy', normalize=True, load_file='normalize=True,vec_env_num=64')
-run(method='test', policy='CnnPolicy', vec_env_num=64, normalize=True, test_window_size=100, load_file='normalize=True,vec_env_num=64,learning_rate=0.0001')
+run(method='test', policy='CnnPolicy', test_window_size=64, normalize=True, load_file='normalize=True,vec_env_num=64')
+# run(method='test', policy='CnnPolicy', vec_env_num=16, normalize=True, load_file='normalize=True,vec_env_num=64')
+# run(method='test', policy='CnnPolicy', vec_env_num=64, normalize=True, enemy_movement='random', load_file='normalize=True,vec_env_num=64,enemy_movement=random')
 # run(timestep=100000000, policy='CnnPolicy', method='test', load_file='atari_params', n_eval_episodes=5)
-# play(normalize=True)
+# play(normalize=True, enemy_movement='random')
