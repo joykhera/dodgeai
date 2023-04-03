@@ -7,7 +7,7 @@ import math
 
 
 class Enemy:
-    def __init__(self, window_width, window_height, color=(255, 0, 0), max_speed=5, max_radius=50, enemy_movement='aimed', random_radius=False, random_speed=False, normalize=False):
+    def __init__(self, window_width, window_height, color=(255, 0, 0), max_speed=5, max_radius=50, enemy_movement='aimed', random_radius=False, random_speed=False, normalize=True):
         self.window_width = window_width
         self.window_height = window_height
         self.game_width = 1 if normalize else window_width
@@ -20,8 +20,8 @@ class Enemy:
         self.random_radius = random_radius
         self.max_radius = max_radius
         self.max_speed = max_speed
-        self.radius = random.randint(1, max_radius) if random_radius else max_radius
-        self.speed = random.randint(1, max_speed) if random_speed else max_speed
+        self.radius = random.uniform(1, max_radius) if random_radius else max_radius
+        self.speed = random.uniform(1, max_speed) if random_speed else max_speed
         self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(175, 355)][random.randint(0, 3)]  # random.randint(0, 360)
         self.enemy_movement = enemy_movement
         self.reset()
@@ -33,7 +33,7 @@ class Enemy:
             x, y, r = self.x * self.window_width, self.y * self.window_height, self.radius * self.window_width
         else:
             x, y, r = self.x, self.y, self.radius
-        # print(window, self.color, (x, y), r)
+        # print('enemy', self.color, (x, y), r, self.radius, self.window_width, self.normalize)
         pygame.draw.circle(window, self.color, (x, y), r)
 
     def reset(self, playerCoords=None, normalize=False):

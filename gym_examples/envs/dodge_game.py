@@ -19,22 +19,28 @@ RED = (255, 0, 0)
 class DodgeGameEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1, normalize=False, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False):
+    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', max_enemy_num=1, player_speed=0.03, enemy_speed=0.02, player_radius=0.05, enemy_radius=0.05, normalize=True, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False, random_enemy_num=False):
         self.model_window_size = model_window_size
         self.window_size = window_size
-        self.player = Player(self.window_size, self.window_size, WHITE, max_speed=0.03, normalize=normalize,
-                             max_radius=0.05, random_radius=random_player_radius, random_speed=random_player_speed)
+        self.player = Player(self.window_size, self.window_size, WHITE, max_speed=player_speed, normalize=normalize,
+                             max_radius=player_radius, random_radius=random_player_radius, random_speed=random_player_speed)
         self.enemies = []
         self.score = 0
         self.game_over = False
         self.policy = policy
         self.enemy_movement = enemy_movement
-        self.enemy_num = enemy_num
+        self.max_enemy_num = max_enemy_num
+        self.random_enemy_num = random_enemy_num
+        self.enemy_num = randint(1, self.max_enemy_num) if self.random_enemy_num else self.max_enemy_num
+        self.enemy_speed = enemy_speed
+        self.enemy_radius = enemy_radius
+        self.random_enemy_speed = random_enemy_speed
+        self.random_enemy_radius = random_enemy_radius
         self.hp = 10
+        self.normalize = normalize
 
-        for i in range(enemy_num):
-            # self.enemies.append(Enemy(self.window_size, self.window_size, enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
-            self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=normalize, max_speed=0.03, max_radius=0.05,
+        for i in range(self.enemy_num):
+            self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=normalize, max_speed=enemy_speed, max_radius=enemy_radius,
                                 enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -43,11 +49,11 @@ class DodgeGameEnv(gym.Env):
         if policy == 'CnnPolicy':
             self.observation_space = spaces.Box(low=0, high=255, shape=(model_window_size, model_window_size, 3), dtype=np.uint8)
         elif policy == 'MultiInputPolicy':
-            if enemy_num > 0:
+            if self.enemy_num > 0:
                 self.observation_space = spaces.Dict(
                     {
                         "agent": spaces.Box(0, window_size - 1, shape=(2,), dtype=int),
-                        "enemy": spaces.Box(1 - window_size, window_size - 1, shape=(4 * enemy_num,), dtype=int),
+                        "enemy": spaces.Box(1 - window_size, window_size - 1, shape=(4 * self.enemy_num,), dtype=int),
                         "walls": spaces.Box(1 - window_size, window_size - 1, shape=(4,), dtype=int),
                     }
                 )
@@ -79,7 +85,7 @@ class DodgeGameEnv(gym.Env):
             # plt.imshow(arr, interpolation='nearest')
             # plt.show()
             return arr
-        
+
         elif self.policy == 'MultiInputPolicy':
             if self.enemy_num > 0:
                 return {
@@ -93,20 +99,12 @@ class DodgeGameEnv(gym.Env):
                     "agent": self.player.getState(),
                     "walls": self.player.getWalls(),
                 }
-                
+
         elif self.policy == 'MathPolicy':
             return {
                 "agent": self.player.getState(radius=True),
                 "enemy": tuple(itertools.chain(*[enemy.getState(radius=True) for enemy in self.enemies])),
             }
-            
-
-    def _get_info(self):
-        return {
-            # "distance": np.linalg.norm(
-            #     self.player.location() - self.enemies[0].location(), ord=1
-            # )
-        }
 
     def reset(self, seed=None, options=None):
         self.game_over = False
@@ -114,21 +112,27 @@ class DodgeGameEnv(gym.Env):
         [enemy.reset() for enemy in self.enemies]
         self.score = 0
         self.hp = 10
+        # self.window_size = randint(64, 128)
+        if self.random_enemy_num:
+            self.enemy_num = randint(1, self.max_enemy_num)
+            self.enemies.clear()
+            for i in range(self.enemy_num):
+                self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=self.normalize, max_speed=self.enemy_speed, max_radius=self.enemy_radius,
+                              enemy_movement=self.enemy_movement, random_radius=self.random_enemy_radius, random_speed=self.random_enemy_speed))
 
         observation = self._get_obs()
-        info = self._get_info()
+        info = {}
 
         if self.render_mode == "human":
             self.render()
 
         # return observation, info
         return observation
-    
+
     def is_game_over(self):
-        # print(self.player.radius, np.array([enemy.radius for enemy in self.enemies]))
-        return np.any(np.linalg.norm(self.player.pos - [enemy.pos for enemy in self.enemies], axis=1) \
-                      < (self.player.radius + np.array([enemy.radius for enemy in self.enemies])) or
-                        np.any((self.player.pos < 0) | (self.player.pos > 1)))
+        return np.any(np.linalg.norm(self.player.pos - [enemy.pos for enemy in self.enemies], axis=1)
+                      < (self.player.radius + np.array([enemy.radius for enemy in self.enemies]))) or \
+            np.any((self.player.pos < 0) | (self.player.pos > 1))
 
     def step(self, action):
         if self.game_over:
@@ -144,10 +148,11 @@ class DodgeGameEnv(gym.Env):
         reward = 1 + game_over * -20
         done = self.hp <= 0
         self.score += reward
-        
+
         self.score += reward
         observation = self._get_obs()
-        info = self._get_info()
+        info = {}
+                
 
         # if self.render_mode == "human":
         #     self.render()
@@ -225,5 +230,5 @@ class DodgeGameEnv(gym.Env):
 
             if self.game_over:
                 self.reset()
-                
+
             self.score += 0.1

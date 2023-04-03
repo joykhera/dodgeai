@@ -1,7 +1,7 @@
 import gym
 from gym_examples import DodgeGameEnv
 import os
-from stable_baselines3 import PPO, A2C
+from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
@@ -16,8 +16,8 @@ import tensorboard
 stop_callback = StopTrainingOnRewardThreshold(reward_threshold=100000, verbose=1)
 
 
-def play(enemy_num=1, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False, enemy_movement='aimed', normalize=False):
-    game = DodgeGameEnv(render_mode='human', enemy_num=enemy_num, enemy_movement=enemy_movement, normalize=normalize, random_player_speed=random_player_speed,
+def play(random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False, enemy_movement='aimed', normalize=True, max_enemy_num=1, random_enemy_num=False):
+    game = DodgeGameEnv(render_mode='human', max_enemy_num=max_enemy_num, random_enemy_num=random_enemy_num, enemy_movement=enemy_movement, normalize=normalize, random_player_speed=random_player_speed,
                         random_enemy_speed=random_enemy_speed, random_player_radius=random_player_radius, random_enemy_radius=random_enemy_radius)
     # game.run()
     game.reset()
@@ -28,16 +28,14 @@ def play(enemy_num=1, random_player_speed=False, random_enemy_speed=False, rando
 
 
 def run(timestep=100000,
-        model_type='PPO',
         method='both',
         load_file=None,
         save_file=None,
         policy='MultiInputPolicy',
-        n_eval_episodes=20,
         enemy_movement='aimed',
-        normalize=False,
+        normalize=True,
         stop_callback=stop_callback,
-        vec_env_num=None,
+        vec_env_num=64,
         train_window_size=64,
         test_window_size=64,
         learning_rate=0.00025,
@@ -48,11 +46,16 @@ def run(timestep=100000,
         clip_range=0.1,
         ent_coef=0.01,
         verbose=1,
-        enemy_num=1,
+        max_enemy_num=1,
+        player_speed=0.03,
+        enemy_speed=0.02,
+        player_radius=0.05,
+        enemy_radius=0.05,
         random_player_speed=False,
         random_enemy_speed=False,
         random_player_radius=False,
         random_enemy_radius=False,
+        random_enemy_num=False,
         ):
 
     assert not (method == 'test' and not load_file and not save_file)
@@ -70,15 +73,13 @@ def run(timestep=100000,
 
     if load_file:
         load_path = os.path.join(save_dir, load_file)
-        if model_type == 'PPO':
-            model = PPO.load(load_path)
-        elif model_type == 'A2C':
-            model = A2C.load(load_path)
+        model = PPO.load(load_path)
 
     def make_env(render_mode='rgb_array'):
         window_size = train_window_size if render_mode == 'rgb_array' else test_window_size
-        env = DodgeGameEnv(render_mode=render_mode, policy=policy, window_size=window_size, enemy_movement=enemy_movement, enemy_num=enemy_num, normalize=normalize, random_player_speed=random_player_speed,
-                           random_enemy_speed=random_enemy_speed, random_player_radius=random_player_radius, random_enemy_radius=random_enemy_radius)
+        env = DodgeGameEnv(render_mode=render_mode, policy=policy, window_size=window_size, enemy_movement=enemy_movement, max_enemy_num=max_enemy_num, normalize=normalize, player_speed=player_speed,
+                           enemy_speed=enemy_speed, player_radius=player_radius, enemy_radius=enemy_radius, random_player_speed=random_player_speed, random_enemy_speed=random_enemy_speed, random_player_radius=random_player_radius, random_enemy_radius=random_enemy_radius, random_enemy_num=random_enemy_num)
+        # env = DodgeGameEnv(render_mode, policy, window_size, enemy_movement, max_enemy_num, normalize, player_speed, enemy_speed, player_radius, enemy_radius, random_player_speed, random_enemy_speed, random_player_radius, random_enemy_radius, random_enemy_num)
 
         # env = TimeLimit(env, 1000)
         if render_mode == 'rgb_array':
@@ -99,26 +100,20 @@ def run(timestep=100000,
             trainEnv = make_env()
 
         if not load_file:
-            if model_type == 'PPO':
-                model = PPO(
-                    env=trainEnv,
-                    tensorboard_log=log_path,
-                    policy=policy,
-                    learning_rate=learning_rate,
-                    n_steps=n_steps,
-                    batch_size=batch_size,
-                    n_epochs=n_epochs,
-                    gamma=gamma,
-                    clip_range=clip_range,
-                    ent_coef=ent_coef,
-                    verbose=verbose,
-                )
-                # model = PPO(policy, env=trainEnv, learning_rate=lambda x: x * 2.5e-4, batch_size=256, n_epochs=4,
-                #             gamma=0.95, clip_range=0.2, ent_coef=0.01,
-                #             verbose=1, tensorboard_log=log_path)
-                # model = PPO(policy, env=trainEnv, verbose=1, tensorboard_log=log_path, n_steps=500000, learning_rate=0.000005)
-            elif model_type == 'A2C':
-                model = A2C(policy, trainEnv, verbose=1, tensorboard_log=log_path)
+            model = PPO(
+                env=trainEnv,
+                tensorboard_log=log_path,
+                policy=policy,
+                learning_rate=learning_rate,
+                # learning_rate=lambda x: x * 0.0001,
+                n_steps=n_steps,
+                batch_size=batch_size,
+                n_epochs=n_epochs,
+                gamma=gamma,
+                clip_range=clip_range,
+                ent_coef=ent_coef,
+                verbose=verbose,
+            )
 
         model.set_env(trainEnv)
         if stop_callback:
@@ -131,23 +126,10 @@ def run(timestep=100000,
         model.save(save_path)
 
     if method == 'test' or method == 'both':
-        # if isinstance(vec_env_num, int):
-        #     testEnv = make_vec_env(vec_env_num, render_mode='human')
-        # else:
-        #     testEnv = make_env(render_mode='human')
-
         if isinstance(vec_env_num, int):
             testEnv = make_vec_env(vec_env_num, render_mode='human')
+            # testEnv = make_vec_env(vec_env_num)
             testEnv.save("./env")
-        else:
-            testEnv = make_env(render_mode='human')
-            
-        if model_type == 'PPO':
-            model = PPO.load(load_path, testEnv)
-        elif model_type == 'A2C':
-            model = A2C.load(load_path)
-
-        if isinstance(vec_env_num, int):
             frames = []
             env = VecNormalize.load("./env", DummyVecEnv([make_env] * vec_env_num))
             env.training = False
@@ -158,7 +140,10 @@ def run(timestep=100000,
                 action, _state = model.predict(obs, deterministic=True)
                 obs, _reward, _done, _info = env.step(action)
                 frames.append(env.render())
+                # media.show_video(frames, fps=30, width=600)
         else:
+            testEnv = make_env(render_mode='human')
+            model = PPO.load(load_path, testEnv)
             obs = testEnv.reset()
             while True:
                 action, _state = model.predict(obs, deterministic=True)
@@ -168,11 +153,12 @@ def run(timestep=100000,
                     testEnv.reset()
 
 
-# run(timestep=5000000, method='train', policy='CnnPolicy', vec_env_num=64, normalize=True, batch_size=1024, save_file='vec_env_num=64,normalize=True,batch_size=1024')
+# add funtionality to to make save_file name in function
+run(timestep=5000000, method='train', policy='CnnPolicy', learning_rate=0.00005, max_enemy_num=5, random_enemy_num=True, enemy_speed=0.01, save_file='learning_rate=0.00005,max_enemy_num=5,random_enemy_num=True,enemy_speed=0.01')
 # run(timestep=2000000, method='train', policy='CnnPolicy', save_file='atari_params,FrameStack=4')
 # run(timestep=100000000, method='train', save_file='n_steps=500000,learning_rate=0.000005,enemy_num=5', enemy_num=5)
-run(method='test', policy='CnnPolicy', test_window_size=64, normalize=True, load_file='normalize=True,vec_env_num=64')
-# run(method='test', policy='CnnPolicy', vec_env_num=16, normalize=True, load_file='normalize=True,vec_env_num=64')
-# run(method='test', policy='CnnPolicy', vec_env_num=64, normalize=True, enemy_movement='random', load_file='normalize=True,vec_env_num=64,enemy_movement=random')
-# run(timestep=100000000, policy='CnnPolicy', method='test', load_file='atari_params', n_eval_episodes=5)
-# play(normalize=True, enemy_movement='random')
+# run(method='test', policy='CnnPolicy', vec_env_num=16, load_file='vec_env_num=64,normalize=True,batch_size=1024')
+# run(method='test', policy='CnnPolicy', vec_env_num=16, enemy_num=5, load_file='vec_env_num=64,learning_rate=0.00005,enemy_num=5')
+# run(method='test', policy='CnnPolicy', vec_env_num=16,
+#     enemy_num=5, enemy_speed=0.01, load_file='vec_env_num=64,learning_rate=0.00005,enemy_num=5,enemy_speed=0.01')
+# play(max_enemy_num=5, random_enemy_num=True)

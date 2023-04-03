@@ -4,14 +4,14 @@ import numpy as np
 import random
 
 class Player:
-    def __init__(self, window_width, window_height, color, max_radius=10, max_speed=10, random_radius=False, random_speed=False, normalize=False):
+    def __init__(self, window_width, window_height, color, max_radius=10, max_speed=10, random_radius=False, random_speed=False, normalize=True):
         self.window_width = window_width
         self.window_height = window_height
         self.game_width = 1 if normalize else window_width
         self.game_height = 1 if normalize else window_height
         self.normalize = normalize
         self.initx = self.game_width / 2
-        self.inity = self.game_width / 2
+        self.inity = self.game_height / 2
         self.x = self.initx
         self.y = self.inity
         self.color = color
@@ -19,8 +19,8 @@ class Player:
         self.random_radius = random_radius
         self.max_radius = max_radius
         self.max_speed = max_speed
-        self.radius = random.randint(1, max_radius) if random_radius else max_radius
-        self.speed = random.randint(1, max_speed) if random_speed else max_speed
+        self.radius = random.uniform(1, max_radius) if random_radius else max_radius
+        self.speed = random.uniform(1, max_speed) if random_speed else max_speed
         self.last_locations = []
         self.pos = np.array((self.x, self.y))
 
@@ -29,7 +29,7 @@ class Player:
             x, y, r = self.x * self.window_width, self.y * self.window_height, self.radius * self.window_width
         else:
             x, y, r = self.x, self.y, self.radius
-        # print(window, self.color, (x, y), r)
+        # print('player', self.color, (x, y), r)
         pygame.draw.circle(window, self.color, (x, y), r)
         
     def aiMove(self, move):
