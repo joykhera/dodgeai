@@ -7,7 +7,7 @@ import math
 
 
 class Enemy:
-    def __init__(self, window_width, window_height, color=(255, 0, 0), max_speed=5, max_radius=50, enemy_movement='aimed', random_radius=False, random_speed=False, normalize=True):
+    def __init__(self, window_width, window_height, color=(255, 0, 0), max_speed=5, max_radius=50, enemy_movement='aimed', randomize_radius=False, randomize_speed=False, normalize=True):
         self.window_width = window_width
         self.window_height = window_height
         self.game_width = 1 if normalize else window_width
@@ -16,12 +16,12 @@ class Enemy:
         self.x = random.randint(0, self.game_width)
         self.y = random.randint(0, self.game_height)
         self.color = color
-        self.random_speed = random_speed
-        self.random_radius = random_radius
+        self.randomize_speed = randomize_speed
+        self.randomize_radius = randomize_radius
         self.max_radius = max_radius
         self.max_speed = max_speed
-        self.radius = random.uniform(1, max_radius) if random_radius else max_radius
-        self.speed = random.uniform(1, max_speed) if random_speed else max_speed
+        self.radius = random.uniform(1, max_radius) if randomize_radius else max_radius
+        self.speed = random.uniform(1, max_speed) if randomize_speed else max_speed
         self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(175, 355)][random.randint(0, 3)]  # random.randint(0, 360)
         self.enemy_movement = enemy_movement
         self.reset()
@@ -37,6 +37,7 @@ class Enemy:
         pygame.draw.circle(window, self.color, (x, y), r)
 
     def reset(self, playerCoords=None, normalize=False):
+        # print(self.enemy_movement)
         if self.enemy_movement == 'aimed':
             side = random.randint(1, 4)
             if side == 1:  # top
@@ -69,10 +70,10 @@ class Enemy:
             self.dx = self.speed * math.cos(math.radians(self.direction))  # random.randint(-self.speed, self.speed)
             self.dy = self.speed * math.sin(math.radians(self.direction))  # random.randint(-self.speed, self.speed)
             
-        if self.random_radius:
+        if self.randomize_radius:
             self.radius = random.randint(1, self.max_radius)
 
-        if self.random_speed:
+        if self.randomize_speed:
             self.speed = random.randint(1, self.max_speed)
         
         # print(self.pos, self.reached)
@@ -104,7 +105,8 @@ class Enemy:
                     self.x = self.game_width - self.radius
                 # Reverse the direction of movement
                 # self.direction = 180 - self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
-                self.dx *= -1
+                # self.dx *= -1
+                self.dx *= -1 + random.uniform(-0.1, 0.1)
             else:
                 self.x = new_x
 
@@ -116,7 +118,8 @@ class Enemy:
                     self.y = self.game_height - self.radius
                 # Reverse the direction of movement
                 # self.direction = -self.direction + random.uniform(0, 1)  # random.uniform(-1, 1)
-                self.dy *= -1
+                # self.dy *= -1
+                self.dy *= -1 + random.uniform(-0.1, 0.1)
             else:
                 self.y = new_y
                 

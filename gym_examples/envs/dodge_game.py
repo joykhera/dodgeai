@@ -19,29 +19,30 @@ RED = (255, 0, 0)
 class DodgeGameEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', max_enemy_num=1, player_speed=0.03, enemy_speed=0.02, player_radius=0.05, enemy_radius=0.05, normalize=True, random_player_speed=False, random_enemy_speed=False, random_player_radius=False, random_enemy_radius=False, random_enemy_num=False):
+    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1, player_speed=0.03, enemy_speed=0.02, player_radius=0.05, enemy_radius=0.05, normalize=True, randomize_player_speed=False, randomize_enemy_speed=False, randomize_player_radius=False, randomize_enemy_radius=False, randomize_enemy_num=False):
         self.model_window_size = model_window_size
         self.window_size = window_size
         self.player = Player(self.window_size, self.window_size, WHITE, max_speed=player_speed, normalize=normalize,
-                             max_radius=player_radius, random_radius=random_player_radius, random_speed=random_player_speed)
+                             max_radius=player_radius, randomize_radius=randomize_player_radius, randomize_speed=randomize_player_speed)
         self.enemies = []
         self.score = 0
         self.game_over = False
         self.policy = policy
         self.enemy_movement = enemy_movement
-        self.max_enemy_num = max_enemy_num
-        self.random_enemy_num = random_enemy_num
-        self.enemy_num = randint(1, self.max_enemy_num) if self.random_enemy_num else self.max_enemy_num
+        self.max_enemy_num = enemy_num
+        # print(max_enemy_num)
+        self.randomize_enemy_num = randomize_enemy_num
+        self.enemy_num = randint(1, self.max_enemy_num) if self.randomize_enemy_num else self.max_enemy_num
         self.enemy_speed = enemy_speed
         self.enemy_radius = enemy_radius
-        self.random_enemy_speed = random_enemy_speed
-        self.random_enemy_radius = random_enemy_radius
+        self.randomize_enemy_speed = randomize_enemy_speed
+        self.randomize_enemy_radius = randomize_enemy_radius
         self.hp = 10
         self.normalize = normalize
 
         for i in range(self.enemy_num):
             self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=normalize, max_speed=enemy_speed, max_radius=enemy_radius,
-                                enemy_movement=enemy_movement, random_radius=random_enemy_radius, random_speed=random_enemy_speed))
+                                enemy_movement=enemy_movement, randomize_radius=randomize_enemy_radius, randomize_speed=randomize_enemy_speed))
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -113,12 +114,13 @@ class DodgeGameEnv(gym.Env):
         self.score = 0
         self.hp = 10
         # self.window_size = randint(64, 128)
-        if self.random_enemy_num:
+        if self.randomize_enemy_num:
             self.enemy_num = randint(1, self.max_enemy_num)
             self.enemies.clear()
+            # print(self.enemy_num)
             for i in range(self.enemy_num):
                 self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=self.normalize, max_speed=self.enemy_speed, max_radius=self.enemy_radius,
-                              enemy_movement=self.enemy_movement, random_radius=self.random_enemy_radius, random_speed=self.random_enemy_speed))
+                              enemy_movement=self.enemy_movement, randomize_radius=self.randomize_enemy_radius, randomize_speed=self.randomize_enemy_speed))
 
         observation = self._get_obs()
         info = {}
