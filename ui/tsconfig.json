@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "strict": true,
+        "alwaysStrict": true,
+        "moduleDetection": "force",
+        "moduleResolution": "Node",
+        "outDir": "dist",
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "noUnusedLocals": true,
+        "inlineSourceMap": true,
+        "noImplicitAny": true
+    },
+    "include": [
+        "/*.ts"
+    ]
+}

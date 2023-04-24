@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 class Player:
-    def __init__(self, window_width, window_height, color, max_radius=10, max_speed=10, randomize_radius=False, randomize_speed=False, normalize=True):
+    def __init__(self, window_width, window_height, color, max_radius=10, max_speed=10, action_space=4, randomize_radius=False, randomize_speed=False, normalize=True):
         self.window_width = window_width
         self.window_height = window_height
         self.game_width = 1 if normalize else window_width
@@ -23,25 +23,39 @@ class Player:
         self.speed = random.uniform(1, max_speed) if randomize_speed else max_speed
         self.last_locations = []
         self.pos = np.array((self.x, self.y))
+        self.action_space = action_space
 
     def draw(self, window):
         if self.normalize:
             x, y, r = self.x * self.window_width, self.y * self.window_height, self.radius * self.window_width
         else:
             x, y, r = self.x, self.y, self.radius
+        # print('player', self.x, self.y, self.radius, x, y, r)
         # print('player', self.color, (x, y), r)
         pygame.draw.circle(window, self.color, (x, y), r)
         
     def aiMove(self, move):
         if isinstance(move, np.int64) or isinstance(move, int) or isinstance(move, np.ndarray):
-            if move == 0:
-                self.x -= self.speed
-            elif move == 1:
-                self.x += self.speed
-            elif move == 2:
-                self.y -= self.speed
-            else:
-                self.y += self.speed
+            if self.action_space == 4:
+                if move == 0:
+                    self.x -= self.speed
+                elif move == 1:
+                    self.x += self.speed
+                elif move == 2:
+                    self.y -= self.speed
+                else:
+                    self.y += self.speed
+            elif self.action_space == 5:
+                if move == 0:
+                    return 
+                elif move == 1:
+                    self.x -= self.speed
+                elif move == 2:
+                    self.x += self.speed
+                elif move == 3:
+                    self.y -= self.speed
+                else:
+                    self.y += self.speed
                         
         elif isinstance(move, tuple):
             self.x += move[0] * self.speed
@@ -84,10 +98,10 @@ class Player:
         self.y = self.inity
         
         if self.randomize_radius:
-            self.radius = random.randint(1, self.max_radius)
+            self.radius = random.uniform(0.01, self.max_radius)
         
         if self.randomize_speed:
-            self.radius = random.randint(1, self.max_radius)
+            self.radius = random.uniform(0.005, self.max_radius)
         
     def getState(self, radius=False, speed=False):
         state = (self.x, self.y)
@@ -102,3 +116,4 @@ class Player:
     
     def getWalls(self):
         return (self.x - self.radius, self.game_width - self.radius - self.x, self.y - self.radius, self.game_height - self.radius - self.y)
+    

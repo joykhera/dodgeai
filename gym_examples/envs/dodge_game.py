@@ -3,12 +3,10 @@ from gym import spaces
 import pygame
 import numpy as np
 from random import randint
-import math
 from .player import Player
 from .enemy import Enemy
-from matplotlib import pyplot as plt
-from skimage.transform import resize
 import itertools
+import cv2
 
 # Define colors
 BLACK = (0, 0, 0)
@@ -19,25 +17,26 @@ RED = (255, 0, 0)
 class DodgeGameEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', enemy_num=1, player_speed=0.03, enemy_speed=0.02, player_radius=0.05, enemy_radius=0.05, normalize=True, randomize_player_speed=False, randomize_enemy_speed=False, randomize_player_radius=False, randomize_enemy_radius=False, randomize_enemy_num=False):
+    def __init__(self, render_mode=None, window_size=64, model_window_size=64, policy='CnnPolicy', enemy_movement='aimed', hp=10, death_penalty=20, enemy_num=1, player_speed=0.03, enemy_speed=0.02, player_radius=0.05, enemy_radius=0.05, action_space=4, normalize=True, randomize_player_speed=False, randomize_enemy_speed=False, randomize_player_radius=False, randomize_enemy_radius=False, randomize_enemy_num=False):
         self.model_window_size = model_window_size
         self.window_size = window_size
         self.player = Player(self.window_size, self.window_size, WHITE, max_speed=player_speed, normalize=normalize,
-                             max_radius=player_radius, randomize_radius=randomize_player_radius, randomize_speed=randomize_player_speed)
+                             max_radius=player_radius, action_space=action_space, randomize_radius=randomize_player_radius, randomize_speed=randomize_player_speed)
         self.enemies = []
         self.score = 0
         self.game_over = False
         self.policy = policy
         self.enemy_movement = enemy_movement
         self.max_enemy_num = enemy_num
-        # print(max_enemy_num)
         self.randomize_enemy_num = randomize_enemy_num
         self.enemy_num = randint(1, self.max_enemy_num) if self.randomize_enemy_num else self.max_enemy_num
         self.enemy_speed = enemy_speed
         self.enemy_radius = enemy_radius
         self.randomize_enemy_speed = randomize_enemy_speed
         self.randomize_enemy_radius = randomize_enemy_radius
-        self.hp = 10
+        self.max_hp = hp
+        self.hp = hp
+        self.death_penalty = death_penalty
         self.normalize = normalize
 
         for i in range(self.enemy_num):
@@ -66,7 +65,7 @@ class DodgeGameEnv(gym.Env):
                     }
                 )
 
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(action_space)
 
         self.clock = None
         if render_mode == 'human' or policy == 'CnnPolicy':
@@ -81,7 +80,8 @@ class DodgeGameEnv(gym.Env):
         if self.policy == 'CnnPolicy':
             arr = self.render()
             if self.window_size != self.model_window_size:
-                arr = resize(arr, (self.model_window_size, self.model_window_size))
+                # arr = resize(arr, (self.model_window_size, self.model_window_size))
+                arr = cv2.resize(arr, (self.model_window_size, self.model_window_size))
             # plt.ion()
             # plt.imshow(arr, interpolation='nearest')
             # plt.show()
@@ -112,7 +112,7 @@ class DodgeGameEnv(gym.Env):
         self.player.reset()
         [enemy.reset() for enemy in self.enemies]
         self.score = 0
-        self.hp = 10
+        self.hp = self.max_hp
         # self.window_size = randint(64, 128)
         if self.randomize_enemy_num:
             self.enemy_num = randint(1, self.max_enemy_num)
@@ -147,8 +147,9 @@ class DodgeGameEnv(gym.Env):
 
         game_over = self.is_game_over()
         self.hp -= game_over
-        reward = 1 + game_over * -20
+        reward = 1 + game_over * (-1 * self.death_penalty)
         done = self.hp <= 0
+        # print(self.hp, done)
         self.score += reward
 
         self.score += reward
