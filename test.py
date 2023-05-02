@@ -7,7 +7,7 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from defaultParams import default_model_hyperparams, default_env_params
 
 
-def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='CnnPolicy'):
+def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='CnnPolicy', window_size=None):
     save_dir = os.path.join('training', 'savedModels', policy)
     if not load_file:
         different_params = get_different_params(default_model_hyperparams, default_env_params, model_hyperparams, env_params)
@@ -15,15 +15,16 @@ def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='
     load_path = os.path.join(save_dir, load_file)
 
     if isinstance(vec_env_num, int):
-        env = make_vec_env(env_params, render_mode='human', vec_env_num=vec_env_num, policy=policy)
+        env = make_vec_env(env_params, render_mode='human', vec_env_num=vec_env_num, policy=policy, window_size=window_size)
         env.save("./env")
         frames = []
-        env = VecNormalize.load("./env", DummyVecEnv([lambda: make_env(env_params)] * vec_env_num))
+        env = VecNormalize.load("./env", DummyVecEnv([lambda: make_env(env_params, window_size=window_size)] * vec_env_num))
         env.training = False
         env.norm_reward = False
         model = PPO.load(load_path, env=env)
         obs = env.reset()
         while True:
+            # print(obs.shape)
             action, _state = model.predict(obs, deterministic=True)
             obs, _reward, _done, _info = env.step(action)
             frames.append(env.render())

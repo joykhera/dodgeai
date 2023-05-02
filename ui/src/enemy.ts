@@ -79,7 +79,7 @@ export default class Enemy {
         ctx.fill();
     }
 
-    reset(playerCoords: Position | null = null, normalize = false) {
+    reset(playerCoords: Position | null = null) {
         const side = Math.floor(Math.random() * 4) + 1;
 
         if (side === 1) {
@@ -100,30 +100,14 @@ export default class Enemy {
             this.y = Math.random() * this.game_height;
         }
 
-        if (
-            this.enemy_movement === 'aimed' ||
-            this.enemy_movement === 'aimed_bounce'
-        ) {
-            if (playerCoords !== null) {
-                const dist_to_target = Math.sqrt(
-                    Math.pow(this.x - playerCoords.x, 2) +
-                    Math.pow(this.y - playerCoords.y, 2)
-                );
-                this.dx =
-                    (this.speed * (playerCoords.x - this.x)) / dist_to_target;
-                this.dy =
-                    (this.speed * (playerCoords.y - this.y)) / dist_to_target;
-            }
+        if ((this.enemy_movement === 'aimed' || this.enemy_movement === 'aimed_bounce') && playerCoords) {
+            const dist_to_target = Math.sqrt((this.x - playerCoords.x) ** 2 + (this.y - playerCoords.y) ** 2);
+            this.dx = this.speed * (playerCoords.x - this.x) / dist_to_target;
+            this.dy = this.speed * (playerCoords.y - this.y) / dist_to_target;
         } else {
-            this.direction = [
-                Math.floor(Math.random() * 80) + 5,
-                Math.floor(Math.random() * 80) + 95,
-                Math.floor(Math.random() * 80) + 185,
-                Math.floor(Math.random() * 80) + 265,
-            ][Math.floor(Math.random() * 4)];
-
-            this.dx = this.speed * Math.cos((this.direction * Math.PI) / 180);
-            this.dy = this.speed * Math.sin((this.direction * Math.PI) / 180);
+            this.direction = Math.random() * 360;
+            this.dx = this.speed * Math.cos(this.direction * Math.PI / 180); // randomBetween(-this.speed, this.speed)
+            this.dy = this.speed * Math.sin(this.direction * Math.PI / 180); // randomBetween(-this.speed, this.speed)
         }
 
         if (this.randomize_radius) {
@@ -137,6 +121,7 @@ export default class Enemy {
 
     public move(playerCoords?: Position): void {
         if (this.enemy_movement === 'aimed' || this.enemy_movement === 'aimed_bounce') {
+            // console.log(this.dx, this.dy)
             const new_x = this.x + this.dx;
             const new_y = this.y + this.dy;
 
@@ -184,8 +169,10 @@ export default class Enemy {
                 this.y = new_y;
             }
         }
+
         this.pos.x = this.x;
         this.pos.y = this.y;
+        // console.log(this.x, this.y, this.pos)
     }
 
     getEnemyState(player?: EnemyState, direction = true, radius = false, speed = false): EnemyState {

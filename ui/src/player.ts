@@ -1,4 +1,4 @@
-import Enemy from './enemy'
+import Enemy from './enemy.js'
 
 interface Position {
     x: number;

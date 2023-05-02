@@ -9,9 +9,9 @@ from defaultParams import default_model_hyperparams, default_env_params
 model_hyperparams = {
     'timestep': 5000000,
     'vec_env_num': 64,
-    'learning_rate': 0.000075,
-    'learning_rate_lambda': True,
-    'n_steps': 512,
+    'learning_rate': 0.00005,
+    'learning_rate_lambda': False,
+    'n_steps': 128,
     'batch_size': 256,
     'n_epochs': 4,
     'gamma': 0.95,
@@ -28,7 +28,7 @@ env_params = {
     'enemy_movement': 'aimed',
     # 'enemy_movement': 'aimed_bounce',
     # 'enemy_movement': 'random',
-    'enemy_num': 1,
+    'enemy_num': 5,
     'hp': 10,
     'death_penalty': 20,
     'normalize': True,
@@ -38,15 +38,15 @@ env_params = {
     'enemy_radius': 0.05,
     'action_space': 4,
     'randomize_player_speed': False,
-    'randomize_enemy_speed': False,
+    'randomize_enemy_speed': True,
     'randomize_player_radius': False,
-    'randomize_enemy_radius': False,
-    'randomize_enemy_num': False,
+    'randomize_enemy_radius': True,
+    'randomize_enemy_num': True,
 }
 
 # make test() get get default load file name from env_params
 print(get_different_params(default_model_hyperparams, default_env_params, model_hyperparams, env_params))
-train(env_params, model_hyperparams, policy='CnnPolicy')
-# test(env_params, model_hyperparams, policy='CnnPolicy', load_file='enemy_num=5,randomize_enemy_num=True')
-# test(env_params, model_hyperparams,  policy='CnnPolicy')
+# train(env_params, model_hyperparams, policy='CnnPolicy')
+# test(env_params, model_hyperparams, policy='CnnPolicy', load_file='learning_rateenemy_num=5,randomize_enemy_num=True')
+test(env_params, model_hyperparams,  policy='CnnPolicy', window_size=128)
 # play(env_params)

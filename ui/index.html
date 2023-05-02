@@ -7,18 +7,69 @@
     <title>Document</title>
 </head>
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script> -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/gym-js@0.2.0/dist/env.min.js"></script> -->
     <canvas id="canvas">
+    <script type='module' src='./dist/game.js'></script>
     <script type="module">
+        import DodgeGameEnv from './dist/game.js';
         try {
-            console.log(ort)
-            const session = await ort.InferenceSession.create('./my_ppo_model.onnx');
+            const myOnnxSession = new onnx.InferenceSession();
+            const game = new DodgeGameEnv()
+            let observation = game.getObservation()
+            //console.log(observation)
+            // load the ONNX model file
+            await myOnnxSession.loadModel("./my_ppo_model.onnx");
+
+            const loop = async () => {
+                //console.log(observation)
+                const rgbData = [];
+                for(let i = 0; i < observation.length; i += 4) {
+                    rgbData.push(observation[i], observation[i+1], observation[i+2]);
+                }
+                const rgbArray = Array.from(rgbData);
+                const inputs = [
+                    new Tensor(new Float32Array(rgbArray), "float32", [1, 3, 64, 64]),
+                ];
+                //console.log(inputs)
+
+                const outputMap = await myOnnxSession.run(inputs);
+                const outputTensor = outputMap.values().next().value;
+                //console.log(outputTensor.data)
+
+                const action = outputTensor.data.indexOf(Math.max(...outputTensor.data))
+                console.log(action)
+                const [_obs, _reward, done, _info] = game.step(action)
+                observation = _obs
+                game.render()
+                if (done) game.reset()
+                window.requestAnimationFrame(loop);
+                // console.log(this.game_over, this.hp)
+            };
+            window.requestAnimationFrame(loop);
+
+            
+           
+            /*// Load the ONNX model
+            const model = await myOnnxSession.load('./my_ppo_model.onnx');
+            console.log(model)
+
+            // Create a session and input tensor
+            const session = new onnx.InferenceSession({ model });
+            const input = new onnx.Tensor(new Float32Array([1, 2, 3, 4]), "float32", [1, 2, 2]);
+
+            // Run inference on the model
+            const outputMap = await session.run([input]);
+
+            // Extract the output tensor
+            const output = outputMap.values().next().value.data;
+
+            console.log(output);*/
         } catch (e) {
             console.log(e)
             document.write(`failed to inference ONNX model: ${e}.`);
         }
     </script>
-    <script type='module' src='./game.js'></script>
 </body>
 </html>

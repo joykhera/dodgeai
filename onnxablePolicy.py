@@ -24,6 +24,7 @@ model = PPO.load(path, device="cpu")
 # onnxable_model = OnnxablePolicy(
 #     model.policy.mlp_extractor, model.policy.action_net, model.policy.value_net
 # )
+print(model.action_space)
 onnxable_model = OnnxablePolicy(
     model.policy.features_extractor, model.policy.action_net, model.policy.value_net
 )

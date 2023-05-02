@@ -15,11 +15,11 @@ def get_different_params(default_model_hyperparams, default_env_params, model_hy
     return different_params
 
 
-def make_env(env_params, policy='CnnPolicy', render_mode='rgb_array'):
+def make_env(env_params, policy='CnnPolicy', render_mode='rgb_array', window_size=None):
     env = DodgeGameEnv(
         render_mode=render_mode,
         policy=policy,
-        window_size=env_params['window_size'],
+        window_size=window_size or env_params['window_size'],
         model_window_size=env_params['model_window_size'],
         hp=env_params['hp'],
         death_penalty=env_params['death_penalty'],
@@ -49,8 +49,9 @@ def make_vec_env(
     policy='CnnPolicy',
     render_mode='rgb_array',
     vec_env_num=64,
+    window_size=None
 ):
     # print(env_params, render_mode, policy, vec_env_num)
     env = VecNormalize(
-        DummyVecEnv([lambda: make_env(env_params, render_mode=render_mode, policy=policy)] * vec_env_num), norm_obs=policy != 'CnnPolicy')
+        DummyVecEnv([lambda: make_env(env_params, render_mode=render_mode, policy=policy, window_size=window_size)] * vec_env_num), norm_obs=policy != 'CnnPolicy')
     return VecTransposeImage(env) if policy == 'CnnPolicy' else env
