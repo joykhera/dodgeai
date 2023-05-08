@@ -27,6 +27,7 @@ def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='
             # print(obs.shape)
             action, _state = model.predict(obs, deterministic=True)
             obs, _reward, _done, _info = env.step(action)
+            # print('obs', obs, obs.shape)
             frames.append(env.render())
     else:
         env = make_env(env_params, render_mode='human')

@@ -47,7 +47,7 @@ class DodgeGameEnv(gym.Env):
         self.render_mode = render_mode
 
         if policy == 'CnnPolicy':
-            self.observation_space = spaces.Box(low=0, high=255, shape=(model_window_size, model_window_size, 3), dtype=np.uint8)
+            self.observation_space = spaces.Box(low=0, high=255, shape=(3, model_window_size, model_window_size), dtype=np.uint8)
         elif policy == 'MultiInputPolicy':
             if self.enemy_num > 0:
                 self.observation_space = spaces.Dict(
@@ -81,10 +81,13 @@ class DodgeGameEnv(gym.Env):
             arr = self.render()
             if self.window_size != self.model_window_size:
                 # arr = resize(arr, (self.model_window_size, self.model_window_size))
+                # print(arr.shape)
                 arr = cv2.resize(arr, (self.model_window_size, self.model_window_size))
+            arr = np.transpose(arr, (2, 0, 1))
             # plt.ion()
             # plt.imshow(arr, interpolation='nearest')
             # plt.show()
+            # print(arr.shape)
             return arr
 
         elif self.policy == 'MultiInputPolicy':

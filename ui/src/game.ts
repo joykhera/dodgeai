@@ -43,7 +43,7 @@ export default class DodgeGameEnv {
         enemy_speed: number = 0.02,
         player_radius: number = 0.05,
         enemy_radius: number = 0.05,
-        action_space: number = 4,
+        action_space: number = 5,
         normalize: boolean = true,
         randomize_player_speed: boolean = false,
         randomize_enemy_speed: boolean = false,
@@ -105,7 +105,10 @@ export default class DodgeGameEnv {
     }
 
     getObservation() {
-        return Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data);
+        // console.log(Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data))
+        // return Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
+        console.log('aaaaa', Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255))
+        return Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255)
     }
 
     reset(): any {

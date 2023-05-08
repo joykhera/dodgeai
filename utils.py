@@ -54,4 +54,5 @@ def make_vec_env(
     # print(env_params, render_mode, policy, vec_env_num)
     env = VecNormalize(
         DummyVecEnv([lambda: make_env(env_params, render_mode=render_mode, policy=policy, window_size=window_size)] * vec_env_num), norm_obs=policy != 'CnnPolicy')
-    return VecTransposeImage(env) if policy == 'CnnPolicy' else env
+    # return VecTransposeImage(env) if policy == 'CnnPolicy' else env
+    return env
