@@ -107,7 +107,7 @@ export default class DodgeGameEnv {
     getObservation() {
         // console.log(Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data))
         // return Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
-        console.log('aaaaa', Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255))
+        // console.log('aaaaa', Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255))
         return Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255)
     }
 

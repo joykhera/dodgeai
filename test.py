@@ -5,6 +5,8 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize, VecTrans
 from utils import get_different_params, make_vec_env, make_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from defaultParams import default_model_hyperparams, default_env_params
+import json
+import numpy as np
 
 
 def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='CnnPolicy', window_size=None):
@@ -24,17 +26,27 @@ def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='
         model = PPO.load(load_path, env=env)
         obs = env.reset()
         while True:
-            # print(obs.shape)
             action, _state = model.predict(obs, deterministic=True)
             obs, _reward, _done, _info = env.step(action)
-            # print('obs', obs, obs.shape)
             frames.append(env.render())
+            
     else:
         env = make_env(env_params, render_mode='human')
         model = PPO.load(load_path, env)
         obs = env.reset()
-        while True:
+        # while True:
+        #     action, _state = model.predict(obs, deterministic=True)
+        #     obs, _reward, _done, _, _info = env.step(action)
+            # if _done:
+            #     env.reset()
+                
+        data = []
+        for i in range(100):
+            # print(np.array([obs.tolist()]).shape)
+            data.append([obs.tolist()])
             action, _state = model.predict(obs, deterministic=True)
+            print(action)
             obs, _reward, _done, _, _info = env.step(action)
-            if _done:
-                env.reset()
+
+        with open('obs.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
