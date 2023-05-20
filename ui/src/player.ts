@@ -66,21 +66,15 @@ export default class Player {
 
 
     public draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-        if (this.normalize) {
-            const cx = this.pos.x * canvas.width;
-            const cy = this.pos.y * canvas.height;
-            const r = this.radius * Math.min(canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.closePath()
-        } else {
-            ctx.beginPath();
-            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-        }
+        let x = this.normalize ? this.pos.x * canvas.width : this.pos.x;
+        let y = this.normalize ? this.pos.y * canvas.height : this.pos.y;
+        let r = this.normalize ? this.radius * Math.min(canvas.width, canvas.height) : this.radius;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath()
     }
 
     public aiMove(move: number | [number, number]) {

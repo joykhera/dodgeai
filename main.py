@@ -48,5 +48,5 @@ env_params = {
 print(get_different_params(default_model_hyperparams, default_env_params, model_hyperparams, env_params))
 # train(env_params, model_hyperparams, policy='CnnPolicy')
 # test(env_params, model_hyperparams, policy='CnnPolicy', vec_env_num=None, load_file='learning_rate=7.5e-05,learning_rate_lambda=True')
-test(env_params, model_hyperparams,  policy='CnnPolicy', vec_env_num=None, load_file='learning_rate=0.00075,learning_rate_lambda=True,window_size=50,model_window_size=50,player_speed=0.02,player_radius=0.02,enemy_radius=0.02,action_space=5')
+test(env_params, model_hyperparams,  policy='CnnPolicy', window_size=100, load_file='learning_rate=0.00075,learning_rate_lambda=True,window_size=50,model_window_size=50,player_radius=0.02,enemy_radius=0.02,action_space=5')
 # play(env_params)

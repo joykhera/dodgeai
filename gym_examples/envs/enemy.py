@@ -22,7 +22,7 @@ class Enemy:
         self.max_speed = max_speed
         self.radius = random.uniform(1, max_radius) if randomize_radius else max_radius
         self.speed = random.uniform(1, max_speed) if randomize_speed else max_speed
-        self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(175, 355)][random.randint(0, 3)]  # random.randint(0, 360)
+        self.direction = [random.randint(5, 85), random.randint(95, 175), random.randint(185, 265), random.randint(275, 355)][random.randint(0, 3)]  # random.randint(0, 360)
         self.enemy_movement = enemy_movement
         self.reset()
         self.reached = False

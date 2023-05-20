@@ -1,6 +1,8 @@
 import Player from './player.js'
 import Enemy from './enemy.js'
-// import math
+
+type enemyMovement = 'aimed' | 'aimed_bounce' | 'random'
+
 
 export default class DodgeGameEnv {
     // render_fps: number;
@@ -10,7 +12,7 @@ export default class DodgeGameEnv {
     enemies: Enemy[] = [];
     score: number = 0;
     game_over: boolean = false;
-    enemy_movement: string;
+    enemy_movement: enemyMovement;
     max_enemy_num: number;
     randomize_enemy_num: boolean;
     enemy_num: number;
@@ -21,7 +23,6 @@ export default class DodgeGameEnv {
     max_hp: number;
     hp: number;
     death_penalty: number;
-    normalize: boolean;
     clock: any = null;
     modelCanvas: HTMLCanvasElement | null = null;
     canvas: HTMLCanvasElement | null = null;
@@ -37,16 +38,15 @@ export default class DodgeGameEnv {
     constructor(
         window_size: number = 500,
         model_window_size: number = 50,
-        enemy_movement: string = 'aimed',
+        enemy_movement: enemyMovement = 'aimed',
         hp: number = 10,
         death_penalty: number = 20,
         enemy_num: number = 1,
-        player_speed: number = 0.01,
-        enemy_speed: number = 0.01,
+        player_speed: number = 0.02,
+        enemy_speed: number = 0.02,
         player_radius: number = 0.02,
         enemy_radius: number = 0.02,
         action_space: number = 5,
-        normalize: boolean = true,
         randomize_player_speed: boolean = false,
         randomize_enemy_speed: boolean = false,
         randomize_player_radius: boolean = false,
@@ -64,7 +64,6 @@ export default class DodgeGameEnv {
             action_space,
             randomize_player_radius,
             randomize_player_speed,
-            normalize,
         );
         this.score = 0;
         this.game_over = false;
@@ -81,14 +80,13 @@ export default class DodgeGameEnv {
         this.max_hp = hp;
         this.hp = hp;
         this.death_penalty = death_penalty;
-        this.normalize = normalize;
         this.modelCanvas = document.getElementById('modelCanvas') as HTMLCanvasElement;
         this.modelCanvas.width = this.window_size;
         this.modelCanvas.height = this.window_size;
         this.modelCtx = this.modelCanvas.getContext("2d");
         this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
-        this.canvas.width = this.window_size;
-        this.canvas.height = this.window_size;
+        this.canvas.width = this.window_size * 10;
+        this.canvas.height = this.window_size * 10;
         this.ctx = this.canvas.getContext("2d");
 
         for (let i = 0; i < this.enemy_num; i++) {
@@ -101,8 +99,7 @@ export default class DodgeGameEnv {
                     enemy_radius,
                     enemy_movement,
                     randomize_enemy_radius,
-                    randomize_enemy_speed,
-                    normalize,
+                    randomize_enemy_speed
                 )
             );
         }
@@ -164,7 +161,6 @@ export default class DodgeGameEnv {
                         this.enemy_movement,
                         this.randomize_enemy_radius,
                         this.randomize_enemy_speed,
-                        this.normalize,
                     )
                 );
             }
@@ -207,20 +203,21 @@ export default class DodgeGameEnv {
 
     render() {
         this.modelCtx.fillStyle = "black";
-        this.modelCtx.fillRect(0, 0, this.window_size, this.window_size);
-
-        // this.modelCtx.beginPath();
-        // this.modelCtx.lineWidth = "4";
-        // this.modelCtx.strokeStyle = "white";
-        // this.modelCtx.rect(0, 0, this.window_size, this.window_size);
-        // this.modelCtx.stroke();
-        // this.modelCtx.closePath()
-
-        // this.window.clearRect(0, 0, this.window_size, this.window_size);
+        this.modelCtx.fillRect(0, 0, this.modelCanvas?.width, this.modelCanvas?.height);
         this.player.draw(this.modelCanvas!, this.modelCtx);
         this.enemies.forEach(enemy => enemy.draw(this.modelCanvas!, this.modelCtx));
         this.modelCtx.font = this.font;
         this.modelCtx.fillStyle = this.BLACK;
+
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(0, 0, this.canvas?.width, this.canvas?.height);
+        this.player.draw(this.canvas!, this.ctx);
+        this.enemies.forEach(enemy => enemy.draw(this.canvas!, this.ctx));
+        this.ctx.font = this.font;
+        this.ctx.fillStyle = this.BLACK;
+
+
+
         // this.window.fillText(`Score: ${this.score}`, 10, 50);
         // this.window.fillText(`HP: ${this.hp}`, 10, 80);
     }
