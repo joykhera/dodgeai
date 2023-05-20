@@ -72,9 +72,16 @@ export default class Player {
             const cy = pos.y * windowHeight;
             const r = radius * windowWidth;
             ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.moveTo(cx, cy - r);
+            ctx.lineTo(cx - r, cy);
+            ctx.lineTo(cx, cy + r);
+            ctx.lineTo(cx + r, cy);
             ctx.fillStyle = this.color;
             ctx.fill();
+            // ctx.beginPath();
+            // ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            // ctx.fillStyle = this.color;
+            // ctx.fill();
         } else {
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);

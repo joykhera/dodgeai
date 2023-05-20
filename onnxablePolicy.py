@@ -19,7 +19,7 @@ class OnnxablePolicy(torch.nn.Module):
         return self.action_net(features), self.value_net(features)
 
 
-path = '/Users/joykhera/Desktop/code/ml/dodgeAI/training/savedModels/CnnPolicy/learning_rate=7.5e-05,learning_rate_lambda=True'
+path = '/Users/joykhera/Desktop/code/ml/dodgeAI/training/savedModels/CnnPolicy/learning_rate=0.00075,learning_rate_lambda=True,window_size=50,model_window_size=50,player_speed=0.02,player_radius=0.02,enemy_radius=0.02,action_space=5'
 model = PPO.load(path, device="cpu")
 # onnxable_model = OnnxablePolicy(
 #     model.policy.mlp_extractor, model.policy.action_net, model.policy.value_net

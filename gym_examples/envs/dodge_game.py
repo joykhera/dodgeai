@@ -179,7 +179,7 @@ class DodgeGameEnv(gym.Env):
 
         canvas = pygame.Surface((self.window_size, self.window_size))
         canvas.fill(BLACK)
-        pygame.draw.rect(canvas, WHITE, (0, 0, self.window_size, self.window_size), 2)
+        # pygame.draw.rect(canvas, WHITE, (0, 0, self.window_size, self.window_size), 2)
 
         self.player.draw(canvas)
         for enemy in self.enemies:

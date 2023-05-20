@@ -39,10 +39,10 @@ export default class DodgeGameEnv {
         hp: number = 10,
         death_penalty: number = 20,
         enemy_num: number = 1,
-        player_speed: number = 0.03,
+        player_speed: number = 0.02,
         enemy_speed: number = 0.02,
-        player_radius: number = 0.05,
-        enemy_radius: number = 0.05,
+        player_radius: number = 0.02,
+        enemy_radius: number = 0.02,
         action_space: number = 5,
         normalize: boolean = true,
         randomize_player_speed: boolean = false,
@@ -108,7 +108,31 @@ export default class DodgeGameEnv {
         // console.log(Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data))
         // return Array.from(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
         // console.log('aaaaa', Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255))
-        return Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255)
+        // return Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255)
+        // console.log(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).colorSpace, this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data.length)
+        const rgbaData = Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
+        const rgbData: number[] = [];
+        for (let i = 0; i < rgbaData.length; i += 4) {
+            rgbData.push(rgbaData[i], rgbaData[i + 1], rgbaData[i + 2]);
+        }
+        // return rgbData
+        const rearrangedArray = [];
+        for (var rgb = 0; rgb < 3; rgb++) {
+            // Iterate over the rows of the original shape
+            for (var row = 0; row < this.window_size; row++) {
+                // Iterate over the columns of the original shape
+                for (var col = 0; col < this.window_size; col++) {
+                    // Calculate the index of the current pixel in the flat array
+                    var index = row * this.window_size + col;
+                    // Calculate the index of the current RGB value in the flat array
+                    var rgbIndex = index * 3 + rgb;
+                    // Push the current RGB value to the rearranged array
+                    rearrangedArray.push(rgbData[rgbIndex]);
+                }
+            }
+        }
+
+        return rearrangedArray
     }
 
     reset(): any {
@@ -176,7 +200,17 @@ export default class DodgeGameEnv {
     }
 
     render() {
-        this.window.clearRect(0, 0, this.window_size, this.window_size);
+        this.window.fillStyle = "black";
+        this.window.fillRect(0, 0, this.window_size, this.window_size);
+
+        // this.window.beginPath();
+        // this.window.lineWidth = "4";
+        // this.window.strokeStyle = "white";
+        // this.window.rect(0, 0, this.window_size, this.window_size);
+        // this.window.stroke();
+        // this.window.closePath()
+
+        // this.window.clearRect(0, 0, this.window_size, this.window_size);
         this.player.draw(this.window);
         this.enemies.forEach(enemy => enemy.draw(this.window));
         this.window.font = this.font;
