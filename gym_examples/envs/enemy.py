@@ -37,15 +37,6 @@ class Enemy:
         # print('enemy', self.color, (x, y), r, self.radius, self.window_width, self.normalize)
         pygame.draw.circle(window, self.color, (x, y), r)
 
-        # r = int(r)
-        # x = int(x)
-        # y = int(y)
-        # for tx in range(x - r, x + r + 1):
-        #     for ty in range(y - r, y + r + 1):
-        #         if (tx - x) ** 2 + (ty - y) ** 2 <= r ** 2:
-        #             window.set_at((tx, ty), self.color)
-        # pygame.display.flip()
-
     def reset(self, playerCoords=None, normalize=False):
         # self.x = 0
         # self.y = 0

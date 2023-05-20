@@ -23,8 +23,10 @@ export default class DodgeGameEnv {
     death_penalty: number;
     normalize: boolean;
     clock: any = null;
-    window: any = null;
+    modelCanvas: HTMLCanvasElement | null = null;
     canvas: HTMLCanvasElement | null = null;
+    modelCtx: any = null;
+    ctx: any = null;
     font: string = "30px sans-serif";
 
     // Define colors
@@ -33,14 +35,14 @@ export default class DodgeGameEnv {
     RED: string = '#FF0000';
 
     constructor(
-        window_size: number = 64,
-        model_window_size: number = 64,
+        window_size: number = 500,
+        model_window_size: number = 50,
         enemy_movement: string = 'aimed',
         hp: number = 10,
         death_penalty: number = 20,
         enemy_num: number = 1,
-        player_speed: number = 0.02,
-        enemy_speed: number = 0.02,
+        player_speed: number = 0.01,
+        enemy_speed: number = 0.01,
         player_radius: number = 0.02,
         enemy_radius: number = 0.02,
         action_space: number = 5,
@@ -80,10 +82,14 @@ export default class DodgeGameEnv {
         this.hp = hp;
         this.death_penalty = death_penalty;
         this.normalize = normalize;
+        this.modelCanvas = document.getElementById('modelCanvas') as HTMLCanvasElement;
+        this.modelCanvas.width = this.window_size;
+        this.modelCanvas.height = this.window_size;
+        this.modelCtx = this.modelCanvas.getContext("2d");
         this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
         this.canvas.width = this.window_size;
         this.canvas.height = this.window_size;
-        this.window = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d");
 
         for (let i = 0; i < this.enemy_num; i++) {
             this.enemies.push(
@@ -110,7 +116,7 @@ export default class DodgeGameEnv {
         // console.log('aaaaa', Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255))
         // return Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data).map((e: number) => e / 255)
         // console.log(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).colorSpace, this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data.length)
-        const rgbaData = Array.from<number>(this.window.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
+        const rgbaData = Array.from<number>(this.modelCtx.getImageData(0, 0, this.canvas!.width, this.canvas!.height).data)
         const rgbData: number[] = [];
         for (let i = 0; i < rgbaData.length; i += 4) {
             rgbData.push(rgbaData[i], rgbaData[i + 1], rgbaData[i + 2]);
@@ -200,21 +206,21 @@ export default class DodgeGameEnv {
     }
 
     render() {
-        this.window.fillStyle = "black";
-        this.window.fillRect(0, 0, this.window_size, this.window_size);
+        this.modelCtx.fillStyle = "black";
+        this.modelCtx.fillRect(0, 0, this.window_size, this.window_size);
 
-        // this.window.beginPath();
-        // this.window.lineWidth = "4";
-        // this.window.strokeStyle = "white";
-        // this.window.rect(0, 0, this.window_size, this.window_size);
-        // this.window.stroke();
-        // this.window.closePath()
+        // this.modelCtx.beginPath();
+        // this.modelCtx.lineWidth = "4";
+        // this.modelCtx.strokeStyle = "white";
+        // this.modelCtx.rect(0, 0, this.window_size, this.window_size);
+        // this.modelCtx.stroke();
+        // this.modelCtx.closePath()
 
         // this.window.clearRect(0, 0, this.window_size, this.window_size);
-        this.player.draw(this.window);
-        this.enemies.forEach(enemy => enemy.draw(this.window));
-        this.window.font = this.font;
-        this.window.fillStyle = this.BLACK;
+        this.player.draw(this.modelCanvas!, this.modelCtx);
+        this.enemies.forEach(enemy => enemy.draw(this.modelCanvas!, this.modelCtx));
+        this.modelCtx.font = this.font;
+        this.modelCtx.fillStyle = this.BLACK;
         // this.window.fillText(`Score: ${this.score}`, 10, 50);
         // this.window.fillText(`HP: ${this.hp}`, 10, 80);
     }

@@ -65,26 +65,19 @@ export default class Player {
     }
 
 
-    public draw(ctx: CanvasRenderingContext2D) {
-        const { pos, radius, windowWidth, windowHeight } = this;
+    public draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
         if (this.normalize) {
-            const cx = pos.x * windowWidth;
-            const cy = pos.y * windowHeight;
-            const r = radius * windowWidth;
+            const cx = this.pos.x * canvas.width;
+            const cy = this.pos.y * canvas.height;
+            const r = this.radius * Math.min(canvas.width, canvas.height);
             ctx.beginPath();
-            ctx.moveTo(cx, cy - r);
-            ctx.lineTo(cx - r, cy);
-            ctx.lineTo(cx, cy + r);
-            ctx.lineTo(cx + r, cy);
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = this.color;
             ctx.fill();
-            // ctx.beginPath();
-            // ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            // ctx.fillStyle = this.color;
-            // ctx.fill();
+            ctx.closePath()
         } else {
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
             ctx.fillStyle = this.color;
             ctx.fill();
         }

@@ -39,14 +39,3 @@ def test(env_params, model_hyperparams, load_file=None, vec_env_num=16, policy='
             obs, _reward, _done, _, _info = env.step(action)
             if _done:
                 env.reset()
-                
-        # data = []
-        # for i in range(100):
-        #     # print(np.array([obs.tolist()]).shape)
-        #     data.append([obs.tolist()])
-        #     action, _state = model.predict(obs, deterministic=True)
-        #     print(action)
-        #     obs, _reward, _done, _, _info = env.step(action)
-
-        # with open('obs.json', 'w', encoding='utf-8') as f:
-        #     json.dump(data, f, ensure_ascii=False, indent=4)

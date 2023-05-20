@@ -28,9 +28,8 @@ export default class Enemy {
     enemy_movement: string; // 'aimed' | 'aimed_bounce' | 'random';
     reached: boolean;
     pos: Position;
-
-    private readonly window_width: number;
-    private readonly window_height: number;
+    window_width: number;
+    window_height: number;
     private readonly game_width: number;
     private readonly game_height: number;
     private readonly normalize: boolean;
@@ -69,67 +68,19 @@ export default class Enemy {
         this.dy = 0;
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
-        let x = this.normalize ? this.x * this.window_width : this.x;
-        let y = this.normalize ? this.y * this.window_height : this.y;
-        let r = this.normalize ? this.radius * this.window_width : this.radius;
-    
-        // ctx.globalAlpha = 1
-
-        // ctx.beginPath();
-        // ctx.moveTo(x, y - r);
-        // ctx.lineTo(x - r, y);
-        // ctx.lineTo(x, y + r);
-        // ctx.lineTo(x + r, y);
-        // ctx.fillStyle = this.color;
-        // ctx.fill();
+    draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+        let x = this.normalize ? this.x * canvas.width : this.x;
+        let y = this.normalize ? this.y * canvas.height : this.y;
+        let r = this.normalize ? this.radius * Math.min(canvas.width, canvas.height) : this.radius;
 
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2, true);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath()
-        // ctx.imageSmoothingEnabled = false;
-        // ctx.drawImage((document.getElementById('canvas') as HTMLCanvasElement), 0, 0, 64, 64, 0, 0, 64, 64);
-
-        // for (var y = 0; y < 64; y++) {
-        //     for (var x = 0; x < 64; x++) {
-        //         var dx = x - cx;
-        //         var dy = y - cy;
-        //         var distance = Math.sqrt(dx * dx + dy * dy);
-        //         // var dx = Math.abs(x - cx);
-        //         // var dy = Math.abs(y - cy);
-        //         // var distance = dx / (r/3) + dy / (r/3);
-
-        //         if (distance <= r) {
-        //             ctx.fillStyle = 'red';
-        //             ctx.fillRect(x, y, 1, 1);
-        //         }
-        //         // else {
-        //         //     ctx.fillStyle = 'black';
-        //         // }
-
-        //         // ctx.fillRect(x, y, 1, 1);
-        //     }
-        // }
-
-        // r = Math.floor(r);
-        // x = Math.floor(x);
-        // y = Math.floor(y);
-
-        // for (let tx = x - r; tx <= x + r; tx++) {
-        //     for (let ty = y - r; ty <= y + r; ty++) {
-        //         if ((tx - x) ** 2 + (ty - y) ** 2 <= r ** 2) {
-        //             ctx.fillStyle = this.color;
-        //             ctx.fillRect(tx, ty, 1, 1);
-        //         }
-        //     }
-        // }
     }
 
     reset(playerCoords: Position | null = null) {
-        // this.x = 0
-        // this.y = 0
         const side = Math.floor(Math.random() * 4) + 1;
 
         if (side === 1) {
