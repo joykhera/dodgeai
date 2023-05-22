@@ -3,7 +3,7 @@ import DodgeGameEnv from './game.js';
 const onnx = (window as any).onnx
 const tf = (window as any).tf
 const myOnnxSession: any = new onnx.InferenceSession()
-await myOnnxSession.loadModel("./dist/my_ppo_model.onnx");
+await myOnnxSession.loadModel("./my_ppo_model.onnx");
 const windowSize = 50
 const game = new DodgeGameEnv();
 let observation = game.getObservation();
