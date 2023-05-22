@@ -11,6 +11,7 @@ export default class DodgeGameEnv {
     player: Player;
     enemies: Enemy[] = [];
     score: number = 0;
+    high_score: number = 0;
     game_over: boolean = false;
     enemy_movement: enemyMovement;
     max_enemy_num: number;
@@ -20,8 +21,7 @@ export default class DodgeGameEnv {
     enemy_radius: number;
     randomize_enemy_speed: boolean;
     randomize_enemy_radius: boolean;
-    max_hp: number;
-    hp: number;
+    deaths: number = 0;
     death_penalty: number;
     clock: any = null;
     modelCanvas: HTMLCanvasElement;
@@ -29,6 +29,9 @@ export default class DodgeGameEnv {
     modelCtx: any = null;
     ctx: any = null;
     font: string = "30px sans-serif";
+    show_score: boolean = true;
+    show_deaths: boolean = true;
+    show_high_score: boolean = true;
 
     // Define colors
     BLACK: string = '#000000';
@@ -39,7 +42,7 @@ export default class DodgeGameEnv {
         model_window_size: number = 50,
         window_size: number = model_window_size * 10,
         enemy_movement: enemyMovement = 'aimed',
-        hp: number = 10,
+        deaths: number = 0,
         death_penalty: number = 20,
         enemy_num: number = 1,
         player_speed: number = 0.03,
@@ -66,6 +69,7 @@ export default class DodgeGameEnv {
             randomize_player_speed,
         );
         this.score = 0;
+        this.high_score = 0;
         this.game_over = false;
         this.enemy_movement = enemy_movement;
         this.max_enemy_num = enemy_num;
@@ -77,17 +81,19 @@ export default class DodgeGameEnv {
         this.enemy_radius = enemy_radius;
         this.randomize_enemy_speed = randomize_enemy_speed;
         this.randomize_enemy_radius = randomize_enemy_radius;
-        this.max_hp = hp;
-        this.hp = hp;
+        this.deaths = deaths;
         this.death_penalty = death_penalty;
         this.modelCanvas = document.getElementById('modelCanvas') as HTMLCanvasElement;
         this.modelCanvas.width = this.model_window_size;
         this.modelCanvas.height = this.model_window_size;
-        this.modelCtx = this.modelCanvas.getContext("2d");
+        this.modelCtx = this.modelCanvas.getContext("2d", { willReadFrequently: true });
         this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
         this.canvas.width = this.window_size
         this.canvas.height = this.window_size
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
+        this.show_score = true;
+        this.show_deaths = true;
+        this.show_high_score = true;
 
         this.addEnemies()
         this.reset();
@@ -103,6 +109,19 @@ export default class DodgeGameEnv {
         document.getElementById('enemySizeSlider')?.addEventListener('input', (e) => {
             this.enemy_radius = (e.target as HTMLInputElement).valueAsNumber / 100
             this.addEnemies()
+        })
+        document.getElementById('enemyMovementSwitch')?.addEventListener('input', (e) => {
+            this.enemy_movement = (e.target as HTMLInputElement).checked ? 'aimed' : 'random'
+            this.addEnemies()
+        })
+        document.getElementById('highScoreCheckBox')?.addEventListener('input', (e) => {
+            this.show_high_score = (e.target as HTMLInputElement).checked
+        })
+        document.getElementById('scoreCheckBox')?.addEventListener('input', (e) => {
+            this.show_score = (e.target as HTMLInputElement).checked
+        })
+        document.getElementById('deathsCheckBox')?.addEventListener('input', (e) => {
+            this.show_deaths = (e.target as HTMLInputElement).checked
         })
     }
 
@@ -127,12 +146,11 @@ export default class DodgeGameEnv {
         return rearrangedArray
     }
 
-    reset(): any {
+    reset(): number[] {
         this.game_over = false;
         this.player.reset();
         this.enemies.forEach(enemy => enemy.reset());
         this.score = 0;
-        this.hp = this.max_hp;
 
         if (this.randomize_enemy_num) {
             this.enemy_num = Math.random() * (this.max_enemy_num - 1) + 1;
@@ -158,35 +176,30 @@ export default class DodgeGameEnv {
         return observation;
     }
 
-    isGameOver(): boolean {
-        return this.enemies.some(enemy => {
-            const distance = Math.sqrt(
-                (this.player.pos.x - enemy.pos.x) ** 2 + (this.player.pos.y - enemy.pos.y) ** 2
-            );
-            return distance < this.player.radius + enemy.radius;
-        }) || this.player.pos.x < 0 || this.player.pos.x > 1 || this.player.pos.y < 0 || this.player.pos.y > 1;
-    }
-
-    step(action: number): [any[], number, boolean, any] {
-        if (this.game_over) {
-            this.game_over = false;
-        }
+    step(action: number): [number[], number, boolean, any] {
         this.player.aiMove(action);
-        this.moveEnemies();
+
+        for (const enemy of this.enemies) {
+            enemy.move(this.player.pos);
+            this.game_over = this.player.isCollidingWith(enemy)
+            if (this.player.isCollidingWith(enemy)) {
+                this.game_over = true;
+            }
+        }
+        
         if (this.player.touchWall()) {
             this.game_over = true;
         }
 
-        const gameOver = this.isGameOver();
-        this.hp -= gameOver ? 1 : 0;
-        const reward = 1 + (this.game_over ? -1 * this.death_penalty : 0);
+        this.deaths += this.game_over ? 1 : 0;
+        const reward = this.game_over ? -this.death_penalty : 1;
         this.score += reward;
+        if(this.score > this.high_score) this.high_score = this.score;
 
         const observation = this.getObservation();
-        const done = this.hp <= 0;
         const info = {};
 
-        return [observation, reward, done, info];
+        return [observation, reward, this.game_over, info];
     }
 
     render() {
@@ -202,22 +215,12 @@ export default class DodgeGameEnv {
         this.player.draw(this.canvas, this.ctx);
         this.enemies.forEach(enemy => enemy.draw(this.canvas, this.ctx));
         this.ctx.font = this.font;
-        this.ctx.fillStyle = this.BLACK;
 
+        this.ctx.fillStyle = "white";
 
-        // this.window.fillText(`Score: ${this.score}`, 10, 50);
-        // this.window.fillText(`HP: ${this.hp}`, 10, 80);
-    }
-
-    moveEnemies(): void {
-        for (const enemy of this.enemies) {
-            enemy.move(this.player.pos);
-
-            // Check for collisions with the player
-            if (this.player.isCollidingWith(enemy)) {
-                this.game_over = true;
-            }
-        }
+        if (this.show_high_score) this.ctx.fillText(`High Score: ${this.high_score}`, 10, 30);
+        if (this.show_score) this.ctx.fillText(`Score: ${this.score}`, 10, this.show_high_score ? 60: 30);
+        if (this.show_deaths) this.ctx.fillText(`Deaths: ${this.deaths}`, 10, this.show_high_score && this.show_score ? 90 : this.show_high_score || this.show_score ? 60 : 30);
     }
 
     addEnemies(): void {
@@ -240,6 +243,7 @@ export default class DodgeGameEnv {
     }
 
     run(): void {
+        // TODO: allow user to play
         const loop = () => {
             const action = Math.floor(Math.random() * 4);
             const [_obs, _reward, done, _info] = this.step(action)

@@ -132,11 +132,6 @@ class DodgeGameEnv(gym.Env):
         # return observation, info
         return observation
 
-    def is_game_over(self):
-        return np.any(np.linalg.norm(self.player.pos - [enemy.pos for enemy in self.enemies], axis=1)
-                      < (self.player.radius + np.array([enemy.radius for enemy in self.enemies]))) or \
-            np.any((self.player.pos < 0) | (self.player.pos > 1))
-
     def step(self, action):
         if self.game_over:
             self.game_over = False
@@ -147,9 +142,8 @@ class DodgeGameEnv(gym.Env):
         if self.player.touch_wall():
             self.game_over = True
 
-        game_over = self.is_game_over()
-        self.hp -= game_over
-        reward = 1 + game_over * (-1 * self.death_penalty)
+        self.hp -= self.game_over
+        reward = 1 + self.game_over * (-1 * self.death_penalty)
         done = self.hp <= 0
         self.score += reward
 
