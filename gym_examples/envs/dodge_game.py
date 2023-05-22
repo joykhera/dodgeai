@@ -80,8 +80,6 @@ class DodgeGameEnv(gym.Env):
         if self.policy == 'CnnPolicy':
             arr = self.render()
             if self.window_size != self.model_window_size:
-                # arr = resize(arr, (self.model_window_size, self.model_window_size))
-                # print(arr.shape)
                 arr = cv2.resize(arr, (self.model_window_size, self.model_window_size))
             arr = np.transpose(arr, (2, 0, 1))
             # plt.ion()
@@ -116,11 +114,11 @@ class DodgeGameEnv(gym.Env):
         [enemy.reset() for enemy in self.enemies]
         self.score = 0
         self.hp = self.max_hp
-        # self.window_size = randint(64, 128)
+
         if self.randomize_enemy_num:
             self.enemy_num = randint(1, self.max_enemy_num)
             self.enemies.clear()
-            # print(self.enemy_num)
+            
             for i in range(self.enemy_num):
                 self.enemies.append(Enemy(self.window_size,  self.window_size, normalize=self.normalize, max_speed=self.enemy_speed, max_radius=self.enemy_radius,
                               enemy_movement=self.enemy_movement, randomize_radius=self.randomize_enemy_radius, randomize_speed=self.randomize_enemy_speed))
@@ -142,9 +140,10 @@ class DodgeGameEnv(gym.Env):
     def step(self, action):
         if self.game_over:
             self.game_over = False
+            
         self.player.aiMove(action)
         self.move_enemies()
-        # print(action, self.player.x, self.player.y, self.player.speed, self.player.radius)
+
         if self.player.touch_wall():
             self.game_over = True
 
@@ -152,28 +151,15 @@ class DodgeGameEnv(gym.Env):
         self.hp -= game_over
         reward = 1 + game_over * (-1 * self.death_penalty)
         done = self.hp <= 0
-        # print(self.hp, done)
         self.score += reward
 
         self.score += reward
         observation = self._get_obs()
         info = {}
-                
-
-        # if self.render_mode == "human":
-        #     self.render()
-
-        # return observation, reward, terminated, False, info
-        # return observation, reward, terminated, info
-        # print(observation, reward, done, info)
+        
         return observation, reward, done, None, info
 
     def render(self, mode="human"):
-        # if self.window is None and self.render_mode == "human":
-        #     pygame.init()
-        #     pygame.display.init()
-        #     self.font = pygame.font.SysFont(None, 30)
-        #     self.window = pygame.display.set_mode((self.window_size, self.window_size))
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
@@ -187,32 +173,19 @@ class DodgeGameEnv(gym.Env):
             # pygame.draw.line(canvas, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
 
         if self.render_mode == "human":
-            # score_text = self.font.render(f"Score: {round(self.score)}", True, WHITE)
-            # canvas.blit(score_text, (10, 10))
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
             pygame.display.update()
-
-            # We need to ensure that human-rendering occurs at the predefined framerate.
-            # The following line will automatically add a delay to keep the framerate stable.
             self.clock.tick(self.metadata["render_fps"])
-        # else:  # rgb_array
-        #     return np.transpose(
-        #         np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
-        #     )
-        # print('ddd', np.transpose(
-        #     np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
-        # ).shape)
+
         return np.transpose(
             np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
         )
 
     def move_enemies(self):
         for enemy in self.enemies:
-            # enemy.move()
             enemy.move((self.player.x, self.player.y))
 
-            # Check for collisions with the player
             if self.player.is_colliding_with(enemy):
                 self.game_over = True
 

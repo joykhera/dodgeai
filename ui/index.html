@@ -9,8 +9,27 @@
 <body>
     <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <canvas id="modelCanvas"></canvas>
+    <canvas style="display:none" id="modelCanvas"></canvas>
     <canvas id="canvas"></canvas>
+
+    <div id="sliders">
+        <p id="fpsText">Framer Per Second: 60</p>
+        <input id="fpsSlider" type="range" min="0" max="120" value="60" oninput="updateTextInput('fpsText', this.value);">
+        <p id="enemyNumText">Enemy Number: 1</p>
+        <input id="enemyNumSlider" type="range" min="0" max="5" value="1" oninput="updateTextInput('enemyNumText', this.value);">
+        <p id="enemySizeText">Enemy Size: 2</p>
+        <input id="enemySizeSlider" type="range" min="0" max="5" value="2" oninput="updateTextInput('enemySizeText', this.value);">
+        <p id="enemySpeedText">Enemy Speed: 2</p>
+        <input id="enemySpeedSlider" type="range" min="0" max="5" value="2" oninput="updateTextInput('enemySpeedText', this.value);">
+    </div>
+
+    <script>
+        function updateTextInput(id, val) {
+            const element = document.getElementById(id);
+            element.innerHTML = `${element.innerHTML.split(": ")[0]}: ${val}`;
+        }
+    </script>
+
     <script type="module" src="./dist/index.js"></script>
 </body>
 </html>

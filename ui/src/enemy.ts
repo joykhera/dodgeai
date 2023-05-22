@@ -82,35 +82,39 @@ export default class Enemy {
     }
 
     reset(playerCoords: Position | null = null) {
-        this.pos = {
-                    x: 0,
-                    y: 0
-                };
-
-        // const side = Math.floor(Math.random() * 4) + 1;
-
-        // switch (side) {
-        //     case 1:
-        //         this.pos = {
-        //             x: Math.random() * this.game_width,
+        // this.pos = {
+        //             x: 0,
         //             y: 0
         //         };
-        //     case 2:
-        //         this.pos = {
-        //             x: this.game_width,
-        //             y: Math.random() * this.game_height
-        //         };
-        //     case 3:
-        //         this.pos = {
-        //             x: Math.random() * this.game_width,
-        //             y: this.game_height
-        //         };
-        //     case 4:
-        //         this.pos = {
-        //             x: 0,
-        //             y: Math.random() * this.game_height
-        //         };
-        // }
+
+        const side = Math.floor(Math.random() * 4) + 1;
+
+        switch (side) {
+            case 1:
+                this.pos = {
+                    x: Math.random() * this.game_width,
+                    y: 0
+                };
+                break
+            case 2:
+                this.pos = {
+                    x: this.game_width,
+                    y: Math.random() * this.game_height
+                };
+                break
+            case 3:
+                this.pos = {
+                    x: Math.random() * this.game_width,
+                    y: this.game_height
+                };
+                break
+            case 4:
+                this.pos = {
+                    x: 0,
+                    y: Math.random() * this.game_height
+                };
+                break
+        }
 
         if ((this.enemy_movement === 'aimed' || this.enemy_movement === 'aimed_bounce') && playerCoords) {
             const dist_to_target = Math.sqrt((this.pos.x - playerCoords.x) ** 2 + (this.pos.y - playerCoords.y) ** 2);
@@ -133,7 +137,6 @@ export default class Enemy {
 
     public move(playerCoords?: Position): void {
         if (this.enemy_movement === 'aimed' || this.enemy_movement === 'aimed_bounce') {
-            // console.log(this.dx, this.dy)
             const new_x = this.pos.x + this.dx;
             const new_y = this.pos.y + this.dy;
 
