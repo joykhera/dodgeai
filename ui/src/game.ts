@@ -24,8 +24,8 @@ export default class DodgeGameEnv {
     hp: number;
     death_penalty: number;
     clock: any = null;
-    modelCanvas: HTMLCanvasElement | null = null;
-    canvas: HTMLCanvasElement | null = null;
+    modelCanvas: HTMLCanvasElement;
+    canvas: HTMLCanvasElement;
     modelCtx: any = null;
     ctx: any = null;
     font: string = "30px sans-serif";
@@ -42,7 +42,7 @@ export default class DodgeGameEnv {
         hp: number = 10,
         death_penalty: number = 20,
         enemy_num: number = 1,
-        player_speed: number = 0.02,
+        player_speed: number = 0.03,
         enemy_speed: number = 0.02,
         player_radius: number = 0.02,
         enemy_radius: number = 0.02,
@@ -85,8 +85,8 @@ export default class DodgeGameEnv {
         this.modelCanvas.height = this.window_size;
         this.modelCtx = this.modelCanvas.getContext("2d");
         this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
-        this.canvas.width = this.window_size * 10;
-        this.canvas.height = this.window_size * 10;
+        this.canvas.width = this.window_size //* 10;
+        this.canvas.height = this.window_size //* 10;
         this.ctx = this.canvas.getContext("2d");
 
         for (let i = 0; i < this.enemy_num; i++) {
@@ -203,19 +203,18 @@ export default class DodgeGameEnv {
 
     render() {
         this.modelCtx.fillStyle = "black";
-        this.modelCtx.fillRect(0, 0, this.modelCanvas?.width, this.modelCanvas?.height);
-        this.player.draw(this.modelCanvas!, this.modelCtx);
-        this.enemies.forEach(enemy => enemy.draw(this.modelCanvas!, this.modelCtx));
+        this.modelCtx.fillRect(0, 0, this.modelCanvas.width, this.modelCanvas.height);
+        this.player.draw(this.modelCanvas, this.modelCtx);
+        this.enemies.forEach(enemy => enemy.draw(this.modelCanvas, this.modelCtx));
         this.modelCtx.font = this.font;
         this.modelCtx.fillStyle = this.BLACK;
 
-        this.ctx.fillStyle = "black";
-        this.ctx.fillRect(0, 0, this.canvas?.width, this.canvas?.height);
-        this.player.draw(this.canvas!, this.ctx);
-        this.enemies.forEach(enemy => enemy.draw(this.canvas!, this.ctx));
-        this.ctx.font = this.font;
-        this.ctx.fillStyle = this.BLACK;
-
+        // this.ctx.fillStyle = "black";
+        // this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // this.player.draw(this.canvas, this.ctx);
+        // this.enemies.forEach(enemy => enemy.draw(this.canvas, this.ctx));
+        // this.ctx.font = this.font;
+        // this.ctx.fillStyle = this.BLACK;
 
 
         // this.window.fillText(`Score: ${this.score}`, 10, 50);

@@ -7,9 +7,9 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from defaultParams import default_model_hyperparams, default_env_params
 
 model_hyperparams = {
-    'timestep': 5000000,
+    'timestep': 10000000,
     'vec_env_num': 64,
-    'learning_rate': 0.00075,
+    'learning_rate': 0.000075,
     'learning_rate_lambda': True,
     'n_steps': 128,
     'batch_size': 256,
@@ -48,5 +48,5 @@ env_params = {
 print(get_different_params(default_model_hyperparams, default_env_params, model_hyperparams, env_params))
 # train(env_params, model_hyperparams, policy='CnnPolicy')
 # test(env_params, model_hyperparams, policy='CnnPolicy', vec_env_num=None, load_file='learning_rate=7.5e-05,learning_rate_lambda=True')
-test(env_params, model_hyperparams,  policy='CnnPolicy', window_size=100, load_file='learning_rate=0.00075,learning_rate_lambda=True,window_size=50,model_window_size=50,player_radius=0.02,enemy_radius=0.02,action_space=5')
+test(env_params, model_hyperparams,  policy='CnnPolicy', vec_env_num=None, load_file='learning_rate=0.00075,learning_rate_lambda=True,window_size=50,model_window_size=50,player_radius=0.02,enemy_radius=0.02,action_space=5')
 # play(env_params)

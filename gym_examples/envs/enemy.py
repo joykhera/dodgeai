@@ -38,21 +38,21 @@ class Enemy:
         pygame.draw.circle(window, self.color, (x, y), r)
 
     def reset(self, playerCoords=None, normalize=False):
-        # self.x = 0
-        # self.y = 0
-        side = random.randint(1, 4)
-        if side == 1:  # top
-            self.x = random.uniform(0, self.game_width)
-            self.y = 0
-        elif side == 2:  # right
-            self.x = self.game_width
-            self.y = random.uniform(0, self.game_height)
-        elif side == 3:  # bottom
-            self.x = random.uniform(0, self.game_width)
-            self.y = self.game_height
-        else:  # left
-            self.x = 0
-            self.y = random.uniform(0, self.game_height)
+        self.x = 0
+        self.y = 0
+        # side = random.randint(1, 4)
+        # if side == 1:  # top
+        #     self.x = random.uniform(0, self.game_width)
+        #     self.y = 0
+        # elif side == 2:  # right
+        #     self.x = self.game_width
+        #     self.y = random.uniform(0, self.game_height)
+        # elif side == 3:  # bottom
+        #     self.x = random.uniform(0, self.game_width)
+        #     self.y = self.game_height
+        # else:  # left
+        #     self.x = 0
+        #     self.y = random.uniform(0, self.game_height)
             
         if (self.enemy_movement == 'aimed' or self.enemy_movement == 'aimed_bounce') and playerCoords is not None:
                 dist_to_target = math.sqrt((self.x - playerCoords[0]) ** 2 + (self.y - playerCoords[1]) ** 2)

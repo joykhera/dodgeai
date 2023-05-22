@@ -67,7 +67,6 @@ export default class Enemy {
         };
         this.dx = 0;
         this.dy = 0;
-        console.log(this.pos)
     }
 
     draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
@@ -83,30 +82,35 @@ export default class Enemy {
     }
 
     reset(playerCoords: Position | null = null) {
-        if (!this.pos) this.pos = {
-            x: Math.floor(Math.random() * (this.game_width + 1)),
-            y: Math.floor(Math.random() * (this.game_height + 1))
-        };
+        this.pos = {
+                    x: 0,
+                    y: 0
+                };
 
-        const side = Math.floor(Math.random() * 4) + 1;
+        // const side = Math.floor(Math.random() * 4) + 1;
 
-        if (side === 1) {
-            // top
-            this.pos.x = Math.random() * this.game_width;
-            this.pos.y = 0;
-        } else if (side === 2) {
-            // right
-            this.pos.x = this.game_width;
-            this.pos.y = Math.random() * this.game_height;
-        } else if (side === 3) {
-            // bottom
-            this.pos.x = Math.random() * this.game_width;
-            this.pos.y = this.game_height;
-        } else {
-            // left
-            this.pos.x = 0;
-            this.pos.y = Math.random() * this.game_height;
-        }
+        // switch (side) {
+        //     case 1:
+        //         this.pos = {
+        //             x: Math.random() * this.game_width,
+        //             y: 0
+        //         };
+        //     case 2:
+        //         this.pos = {
+        //             x: this.game_width,
+        //             y: Math.random() * this.game_height
+        //         };
+        //     case 3:
+        //         this.pos = {
+        //             x: Math.random() * this.game_width,
+        //             y: this.game_height
+        //         };
+        //     case 4:
+        //         this.pos = {
+        //             x: 0,
+        //             y: Math.random() * this.game_height
+        //         };
+        // }
 
         if ((this.enemy_movement === 'aimed' || this.enemy_movement === 'aimed_bounce') && playerCoords) {
             const dist_to_target = Math.sqrt((this.pos.x - playerCoords.x) ** 2 + (this.pos.y - playerCoords.y) ** 2);
