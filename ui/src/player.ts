@@ -69,7 +69,7 @@ export default class Player {
         let x = this.normalize ? this.pos.x * canvas.width : this.pos.x;
         let y = this.normalize ? this.pos.y * canvas.height : this.pos.y;
         let r = this.normalize ? this.radius * Math.min(canvas.width, canvas.height) : this.radius;
-        
+
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
@@ -77,35 +77,61 @@ export default class Player {
         ctx.closePath()
     }
 
-    public aiMove(move: number | [number, number]) {
+    public move(move: number | [number, number] | [boolean, boolean, boolean, boolean]) {
         if (typeof move === 'number') {
             if (this.actionSpace === 4) {
-                if (move === 0) {
-                    this.pos.x -= this.speed;
-                } else if (move === 1) {
-                    this.pos.x += this.speed;
-                } else if (move === 2) {
-                    this.pos.y -= this.speed;
-                } else if (move === 3) {
-                    this.pos.y += this.speed;
+                switch (move) {
+                    case 0:
+                        this.pos.x -= this.speed;
+                        break;
+                    case 1:
+                        this.pos.x += this.speed;
+                        break;
+                    case 2:
+                        this.pos.y -= this.speed;
+                        break;
+                    case 3:
+                        this.pos.y += this.speed;
+                        break;
                 }
             } else if (this.actionSpace === 5) {
-                if (move === 0) {
-                    return;
-                } else if (move === 1) {
+                switch (move) {
+                    case 0:
+                        break;
+                    case 1:
+                        this.pos.x -= this.speed;
+                        break;
+                    case 2:
+                        this.pos.x += this.speed;
+                        break;
+                    case 3:
+                        this.pos.y -= this.speed;
+                        break;
+                    case 4:
+                        this.pos.y += this.speed;
+                        break;
+                }
+            }
+        } else if (typeof move === 'object') {
+            if (move.length === 2) {
+                const [x, y] = move;
+                this.pos.x += x * this.speed;
+                this.pos.y += y * this.speed;
+            } else if (move.length === 4) {
+                const [left, right, up, down] = move;
+                if (left) {
                     this.pos.x -= this.speed;
-                } else if (move === 2) {
+                }
+                if (right) {
                     this.pos.x += this.speed;
-                } else if (move === 3) {
+                }
+                if (up) {
                     this.pos.y -= this.speed;
-                } else if (move === 4) {
+                }
+                if (down) {
                     this.pos.y += this.speed;
                 }
             }
-        } else {
-            const [x, y] = move;
-            this.pos.x += x * this.speed;
-            this.pos.y += y * this.speed;
         }
     }
 

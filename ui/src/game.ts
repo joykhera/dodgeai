@@ -176,12 +176,11 @@ export default class DodgeGameEnv {
         return observation;
     }
 
-    step(action: number): [number[], number, boolean, any] {
-        this.player.aiMove(action);
+    step(action: number | [boolean, boolean, boolean, boolean]): number[] {
+        this.player.move(action);
 
         for (const enemy of this.enemies) {
             enemy.move(this.player.pos);
-            this.game_over = this.player.isCollidingWith(enemy)
             if (this.player.isCollidingWith(enemy)) {
                 this.game_over = true;
             }
@@ -197,9 +196,9 @@ export default class DodgeGameEnv {
         if(this.score > this.high_score) this.high_score = this.score;
 
         const observation = this.getObservation();
-        const info = {};
+        if (this.game_over) this.reset();
 
-        return [observation, reward, this.game_over, info];
+        return observation;
     }
 
     render() {
@@ -240,17 +239,5 @@ export default class DodgeGameEnv {
             );
         }
         this.reset()
-    }
-
-    run(): void {
-        // TODO: allow user to play
-        const loop = () => {
-            const action = Math.floor(Math.random() * 4);
-            const [_obs, _reward, done, _info] = this.step(action)
-            this.render()
-            if (done) this.reset()
-            window.requestAnimationFrame(loop);
-        };
-        window.requestAnimationFrame(loop);
     }
 }

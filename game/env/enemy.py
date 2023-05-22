@@ -33,7 +33,7 @@ class Enemy:
             
         pygame.draw.circle(window, self.color, (x, y), r)
 
-    def reset(self, playerCoords=None, normalize=False):
+    def reset(self, playerCoords=None):
         # self.x = 0
         # self.y = 0
         side = random.randint(1, 4)

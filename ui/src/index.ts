@@ -12,6 +12,9 @@ let fpsInterval = 1000 / fps
 let then = Date.now()
 let now: number, elapsed: number;
 let timer = setInterval(loop, fpsInterval);
+let aiPlay = true
+let action: number = 0
+let actionArr: [boolean, boolean, boolean, boolean] = [false, false, false, false]
 
 
 document.getElementById('fpsSlider')?.addEventListener('input', (e) => {
@@ -21,20 +24,61 @@ document.getElementById('fpsSlider')?.addEventListener('input', (e) => {
     timer = setInterval(loop, fpsInterval);
 })
 
+document.getElementById('playerSwitch')?.addEventListener('input', (e) => {
+    aiPlay = (e.target as HTMLInputElement).checked
+})
+
+Array.from(document.getElementsByClassName('slider')).forEach((slider: Element) => {
+    (slider as HTMLInputElement).addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+        }
+    });
+})
+
 async function loop() {
     now = Date.now();
     elapsed = now - then;
     then = now - (elapsed % fpsInterval);
 
-    const input = [
-        new onnx.Tensor(new Float32Array(observation) as any, "float32", [1, 3, windowSize, windowSize])
-    ];
+    if (aiPlay) {
+        const input = [
+            new onnx.Tensor(new Float32Array(observation) as any, "float32", [1, 3, windowSize, windowSize])
+        ];
 
-    const outputMap = await myOnnxSession.run(input);
-    const outputTensor = outputMap.values().next().value;
-    const action = (await tf.multinomial(outputTensor.data, 1).data())[0];
-    const [_obs, _reward, done, _info] = game.step(action);
-    observation = _obs;
+        const outputMap = await myOnnxSession.run(input);
+        const outputTensor = outputMap.values().next().value;
+        action = (await tf.multinomial(outputTensor.data, 1).data())[0];
+        observation = game.step(action);
+    }
+
+    else {
+        // action = 0;
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "ArrowLeft" || event.key === "a") {
+                actionArr[0] = true;
+            } else if (event.key === "ArrowRight" || event.key === "d") {
+                actionArr[1] = true;
+            } else if (event.key === "ArrowUp" || event.key === "w") {
+                actionArr[2] = true;
+            } else if (event.key === "ArrowDown" || event.key === "s") {
+                actionArr[3] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === "ArrowLeft" || event.key === "a") {
+                actionArr[0] = false;
+            } else if (event.key === "ArrowRight" || event.key === "d") {
+                actionArr[1] = false;
+            } else if (event.key === "ArrowUp" || event.key === "w") {
+                actionArr[2] = false;
+            } else if (event.key === "ArrowDown" || event.key === "s") {
+                actionArr[3] = false;
+            }
+        });
+        observation = game.step(actionArr);
+    }
+    // console.log(action)
     game.render();
-    if (done) game.reset();
 }

@@ -1,4 +1,4 @@
-from gym_examples import DodgeGameEnv
+from game import DodgeGameEnv
 
 def play(env_params, policy='CnnPolicy'):
     game = DodgeGameEnv(

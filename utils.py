@@ -1,4 +1,4 @@
-from gym_examples import DodgeGameEnv
+from game import DodgeGameEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize, VecTransposeImage
 
