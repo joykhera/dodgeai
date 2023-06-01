@@ -143,7 +143,10 @@ class DodgeGameEnv(gym.Env):
             self.game_over = True
 
         self.hp -= self.game_over
-        reward = 1 + self.game_over * (-1 * self.death_penalty)
+        center = 0.5 if self.normalize else self.window_size / 2
+        # print(self.player.x, self.player.y, 1 - ((self.player.x - center) ** 2 + (self.player.y - center) ** 2) ** 0.5)
+        reward =  + self.game_over * (-1 * self.death_penalty)
+        # reward = -self.death_penalty if self.game_over else 2 - ((self.player.x - center) ** 2 + (self.player.y - center) ** 2) ** 0.5
         done = self.hp <= 0
         self.score += reward
 
@@ -164,7 +167,7 @@ class DodgeGameEnv(gym.Env):
         self.player.draw(canvas)
         for enemy in self.enemies:
             enemy.draw(canvas)
-            # pygame.draw.line(canvas, RED, (enemy.x, enemy.y), (self.player.x, self.player.y), 2)
+            # pygame.draw.line(canvas, RED, (enemy.x * self.window_size, enemy.y * self.window_size), (self.player.x * self.window_size, self.player.y * self.window_size), 1)
 
         if self.render_mode == "human":
             self.window.blit(canvas, canvas.get_rect())

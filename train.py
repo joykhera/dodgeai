@@ -31,14 +31,16 @@ def train(
         log_path = os.path.join('training', 'logs', policy, save_file)
         save_path = os.path.join(save_dir, save_file)
 
-    if load_file:
-        load_path = os.path.join(save_dir, load_file)
-        model = PPO.load(load_path)
-
     if isinstance(model_hyperparams['vec_env_num'], int):
         env = make_vec_env(env_params, vec_env_num=model_hyperparams['vec_env_num'], policy=policy, render_mode='rgb_array')
     else:
         env = make_env(env_params, policy=policy, env_params=env_params)
+        
+    if load_file:
+        load_path = os.path.join(save_dir, load_file)
+        print('loading model from', load_path, '...')
+        print('(os.path.isfile(load_path)', os.path.isfile(load_path))
+        model = PPO.load(load_path, env=env, custom_objects={'observation_space': env.observation_space, 'action_space': env.action_space})
 
     if not load_file:
         model = PPO(

@@ -60,10 +60,10 @@ class Enemy:
             self.dy = self.speed * math.sin(math.radians(self.direction))  # random.randint(-self.speed, self.speed)
             
         if self.randomize_radius:
-            self.radius = random.uniform(0.01, self.max_radius)
+            self.radius = random.uniform(0.005, self.max_radius)
 
         if self.randomize_speed:
-            self.speed = random.uniform(0.01, self.max_speed)
+            self.speed = random.uniform(0.005, self.max_speed)
             
 
     def move(self, playerCoords=None):
