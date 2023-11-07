@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,51 +10,58 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body>
-    
+
     <h1>Dodge AI</h1>
 
     <canvas style="display:none" id="modelCanvas"></canvas>
     <canvas id="canvas"></canvas>
     <br>
-    <div id="switches" style="float: left; margin-right: 25px">
-        <h3 id="enemyMovementText">Enemy Movement: Aimed</h3>
-        <label class="switch">
-            <input id="enemyMovementSwitch" type="checkbox" checked oninput="switchOnInput('enemyMovementText', this.checked);">
-            <span class="switchSlider"></span>
-        </label>
-        <h3 id="playerText">Current Player: AI</h3>
-        <label class="switch">
-            <input id="playerSwitch" type="checkbox" checked oninput="switchOnInput('playerText', this.checked);">
-            <span class="switchSlider"></span>
-        </label>
-    </div>
+    <div id="inputs">
+        <div id="switches" class="section">
+            <h3 id="enemyMovementText">Enemy Movement: Aimed</h3>
+            <label class="switch">
+                <input id="enemyMovementSwitch" type="checkbox" checked
+                    oninput="switchOnInput('enemyMovementText', this.checked);">
+                <span class="switchSlider"></span>
+            </label>
+            <h3 id="playerText">Current Player: AI</h3>
+            <label class="switch">
+                <input id="playerSwitch" type="checkbox" checked oninput="switchOnInput('playerText', this.checked);">
+                <span class="switchSlider"></span>
+            </label>
+        </div>
 
-    <div id="evalCheckBoxes" style="float: left; margin-right: 25px">
-        <h3 id="evalText">Display: </h3>
-        <label class="checkBoxContainer">High Score
-            <input type="checkbox" id="highScoreCheckBox" name="highScore" value="highScore" checked>
-            <span class="checkmark"></span>
-        </label>
-        <label class="checkBoxContainer">Score
-            <input type="checkbox" id="scoreCheckBox" name="score" value="score" checked>
-            <span class="checkmark"></span>
-        </label>
-        <label class="checkBoxContainer">Deaths
-            <input type="checkbox" id="deathsCheckBox" name="deaths" value="deaths" checked>
-            <span class="checkmark"></span>
-        </label>
-    </div>
+        <div id="evalCheckBoxes" class="section">
+            <h3 id="evalText">Display: </h3>
+            <label class="checkBoxContainer">High Score
+                <input type="checkbox" id="highScoreCheckBox" name="highScore" value="highScore" checked>
+                <span class="checkmark"></span>
+            </label>
+            <label class="checkBoxContainer">Score
+                <input type="checkbox" id="scoreCheckBox" name="score" value="score" checked>
+                <span class="checkmark"></span>
+            </label>
+            <label class="checkBoxContainer">Deaths
+                <input type="checkbox" id="deathsCheckBox" name="deaths" value="deaths" checked>
+                <span class="checkmark"></span>
+            </label>
+        </div>
 
-    <div id="sliders" style="float: left; margin-right: 25px">
-        <h3 id="fpsText">Framer Per Second: 60</h3>
-        <input id="fpsSlider" class="slider" type="range" min="0" max="120" value="60" oninput="sliderOnInput('fpsText', this.value);">
-        <h3 id="enemyNumText">Enemy Number: 1</h3>
-        <input id="enemyNumSlider" class="slider" type="range" min="0" max="5" value="1" oninput="sliderOnInput('enemyNumText', this.value);">
-        <!-- <h3 id="enemySizeText">Enemy Size: 2</h3>
+        <div id="sliders" class="section">
+            <h3 id="fpsText">Framer Per Second: 60</h3>
+            <input id="fpsSlider" class="slider" type="range" min="0" max="120" value="60"
+                oninput="sliderOnInput('fpsText', this.value);">
+            <h3 id="enemyNumText">Enemy Number: 1</h3>
+            <input id="enemyNumSlider" class="slider" type="range" min="0" max="5" value="1"
+                oninput="sliderOnInput('enemyNumText', this.value);">
+            <!-- <h3 id="enemySizeText">Enemy Size: 2</h3>
         <input id="enemySizeSlider" class="slider" type="range" min="0" max="5" value="2" oninput="sliderOnInput('enemySizeText', this.value);"> -->
-        <h3 id="enemySpeedText">Enemy Speed: 2</h3>
-        <input id="enemySpeedSlider" class="slider" type="range" min="0" max="5" value="2" oninput="sliderOnInput('enemySpeedText', this.value);">
+            <h3 id="enemySpeedText">Enemy Speed: 2</h3>
+            <input id="enemySpeedSlider" class="slider" type="range" min="0" max="5" value="2"
+                oninput="sliderOnInput('enemySpeedText', this.value);">
+        </div>
     </div>
 
     <script>
@@ -65,7 +73,7 @@
         function switchOnInput(id, val) {
             const element = document.getElementById(id);
             let text
-            switch (id){
+            switch (id) {
                 case "enemyMovementText":
                     text = val ? "Aimed" : "Random";
                     break;
@@ -82,4 +90,5 @@
 
     <script type="module" src="./dist/index.js"></script>
 </body>
+
 </html>
